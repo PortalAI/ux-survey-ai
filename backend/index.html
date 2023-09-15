@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat</title>
+    <style>
+        #chatBox {
+            width: 300px;
+            height: 400px;
+            border: 1px solid #ccc;
+            overflow-y: scroll;
+        }
+    </style>
+</head>
+<body>
+    <div id="chatBox"></div>
+    <input type="text" id="inputMessage" placeholder="Type your message here...">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        let ws = new WebSocket("ws://127.0.0.1:8000/chat");
+
+        ws.onopen = function(event) {
+            console.log("Connected to the WebSocket server.");
+        };
+        
+        ws.onmessage = function(event) {
+            let chatBox = document.getElementById('chatBox');
+            chatBox.innerHTML += "<p>" + event.data + "</p>";
+        };
+        
+        ws.onclose = function(event) {
+            if (event.wasClean) {
+                console.log(`Connection closed cleanly, code=${event.code}, reason=${event.reason}`);
+            } else {
+                console.error('Connection died');
+            }
+        };
+        
+        ws.onerror = function(error) {
+            console.error(`[error] ${error.message}`);
+        };
+        
+        function sendMessage() {
+            let input = document.getElementById('inputMessage');
+            let message = input.value;
+            ws.send(message); // Send the message to the WebSocket server
+            input.value = ''; // Clear the input field
+        }
+        // Add this new event listener
+        document.getElementById('inputMessage').addEventListener('keydown', function(event) {
+            if (event.keyCode === 13) { // 13 is the key code for the Enter key
+                event.preventDefault();  // Prevents the default action (new line or form submission)
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
