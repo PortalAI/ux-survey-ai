@@ -48,6 +48,8 @@ async def websocket(websocket: WebSocket, survey_id: str):
     session_id = str(id(websocket))
     # insert a new entry in survey session
     prompt = business_survey_table.get_prompt_from_survey_id(survey_id)
+    if prompt is None:
+        prompt = constant.LLM_PREAMBLE_HARDCODE
     survey_table.initiate_survey_session(survey_id=survey_id, session_id=session_id)
     try:
         agent = langchain_agent.LangChainAgent()
