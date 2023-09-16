@@ -33,9 +33,6 @@ app.add_middleware(
         allow_headers=["*"],
     )
 
-# app.mount("/front", StaticFiles(directory="front/public", html=True), name="front")
-# app.mount("/build", StaticFiles(directory="front/public/build"), name="build")
-
 @app.get("/")
 async def front():
    return RedirectResponse(url='front')
@@ -43,20 +40,6 @@ async def front():
 @app.get("/health_check")
 async def health_check():
     return {"message": "hello"}
-
-# @app.get("/set/")
-# def set_session(request: Request):
-#     request.session["foo"] = "bar"
-#     return {"status": "session value set"}
-
-# @app.get("/get/")
-# def get_session(request: Request):
-#     value = request.session.get("foo")
-#     return {"session value": value}
-
-# @app.post("/initialize_session")
-# def initialize_session(request: Request):
-#     pass
 
 @app.websocket("/chat")
 async def websocket(websocket: WebSocket):
@@ -83,6 +66,5 @@ async def websocket(websocket: WebSocket):
             summary=summary
         )
         print(f'client #{str(id(websocket))} is disconnected')
-
 
 app.include_router(db_routers)
