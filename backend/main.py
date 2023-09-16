@@ -24,6 +24,7 @@ app.add_middleware(
     SessionMiddleware, secret_key=constant.SESSION_SECRET_KEY, max_age=3600  # 1 hour
 )
 survey_table = table_ops.SurveySessionTable()
+business_survey_table = table_ops.BusinessSurveyTable()
 
 app.add_middleware(
         CORSMiddleware,
@@ -45,15 +46,17 @@ async def health_check():
 async def websocket(websocket: WebSocket, survey_id: str):
     await websocket.accept()
     session_id = str(id(websocket))
-    survey_id = survey_id
     # insert a new entry in survey session
+    prompt = business_survey_table.get_prompt_from_survey_id(survey_id)
     survey_table.initiate_survey_session(survey_id=survey_id, session_id=session_id)
     try:
         agent = langchain_agent.LangChainAgent()
+        response = agent.generate_response(prompt)
+        await websocket.send_text(response)
         while True:
             data = await websocket.receive_text()
             response = agent.generate_response(data)
-            await websocket.send_text(f"bot responded: {response}")
+            await websocket.send_text(response)
     except WebSocketDisconnect:
         # store chat summary into session table
         summary = agent.generate_response(constant.SUMMARIZATION_PROMPT)

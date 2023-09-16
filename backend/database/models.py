@@ -15,6 +15,7 @@ class BusinessSurvey(BaseModel):
     presentation_link: str
     presentation_password: str
     created_at: str
+    prompt: str | None
 
 class SurveySession(BaseModel):
     survey_id: str

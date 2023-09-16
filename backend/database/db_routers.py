@@ -21,7 +21,6 @@ survey_session_table =SurveySessionTable()
 def create_business_survey_endpoint(item: CreateBusinessSurveyRequest):
     business_id = str(uuid.uuid4())
     survey_id = str(uuid.uuid4())
-    survey_link_id = str(uuid.uuid4())
     presentation_link_id = str(uuid.uuid4())
     presentation_password = str(uuid.uuid4())
     business_entry = Business(
@@ -39,7 +38,7 @@ def create_business_survey_endpoint(item: CreateBusinessSurveyRequest):
           business_description=item.business_description,
           survey_description=item.survey_description
         ),
-        survey_link = f'/chat/{survey_link_id}',
+        survey_link = f'/chat/{survey_id}',
         presentation_link = f'/presentation/{presentation_link_id}',
         presentation_password = f'{presentation_password}',
         created_at = datetime.utcnow().isoformat(),
@@ -51,7 +50,7 @@ def create_business_survey_endpoint(item: CreateBusinessSurveyRequest):
         business_id=business_entry.business_id,
         business_name=business_entry.business_name,
         business_description=business_entry.business_description,
-        survey_link=business_survey_entry.survey_link,
+        survey_link=f'/chat/{survey_id}',
         presentation_link=business_survey_entry.presentation_link,
         presentation_password=presentation_password,
     )
@@ -72,13 +71,13 @@ def update_survey_session(request: Request, update_request: UpdateSurveySessionR
         **update_request
     )
 
-@router.get("/survey/{survey_link_id}")
-def find_survey_link_id(survey_link_id: str):
-    items = business_survey_table.scan(Attr('survey_link').eq(f'/chat/{survey_link_id}'))
+@router.get("/survey/{survey_id}")
+def find_survey_link_id(survey_id: str):
+    items = business_survey_table.scan(Attr('survey_id').eq(survey_id))
     if items:
         return
     else:
-        raise HTTPException(status_code=404, detail=f"survey link id {survey_link_id} not found")
+        raise HTTPException(status_code=404, detail=f"survey id {survey_id} not found")
     
 
 @router.get("/presentation/{presentation_link_id}")

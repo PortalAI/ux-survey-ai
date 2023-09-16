@@ -1,7 +1,7 @@
 from .dynamodb_table import DynamoDBTable
 from .models import Business, BusinessSurvey, SurveySession
 from constant import BUSINESS_TABLE_NAME, BUSINESS_SURVEY_TABLE_NAME, SURVEY_SESSION_TABLE_NAME
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key, Attr
 from collections.abc import Sequence
 from datetime import datetime
 
@@ -27,6 +27,13 @@ class BusinessSurveyTable(DynamoDBTable[BusinessSurvey]):
             KeyConditionExpression=Key('survey_name').eq(survey_name)
         )
         return response.get('Items', [])
+    
+    def get_prompt_from_survey_id(self, survey_id: str) -> str | None:
+        surveys = self.table.scan(FilterExpression=Attr('survey_id').eq(survey_id)).get("Items", [])
+        if surveys and 'prompt' in surveys[0]:
+            return surveys[0].get('prompt')
+        return None
+        
 
 class SurveySessionTable(DynamoDBTable[SurveySession]):
     def __init__(self):
