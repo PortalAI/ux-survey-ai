@@ -19,7 +19,7 @@
     <button onclick="sendMessage()">Send</button>
 
     <script>
-        let ws = new WebSocket("ws://127.0.0.1:8000/chat");
+        let ws = new WebSocket("ws://127.0.0.1:8000/chat/testIndexHtml");
 
         ws.onopen = function(event) {
             console.log("Connected to the WebSocket server.");

@@ -41,13 +41,11 @@ async def front():
 async def health_check():
     return {"message": "hello"}
 
-@app.websocket("/chat")
-async def websocket(websocket: WebSocket):
+@app.websocket("/chat/{survey_id}")
+async def websocket(websocket: WebSocket, survey_id: str):
     await websocket.accept()
-    # session_id = request.session.get("session_id")
-    # survey_id = request.session.get("survey_id")
-    session_id = 'session_id_1'
-    survey_id = 'survey_id_1'
+    session_id = str(id(websocket))
+    survey_id = survey_id
     # insert a new entry in survey session
     survey_table.initiate_survey_session(survey_id=survey_id, session_id=session_id)
     try:
