@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from .models import Business, BusinessSurvey, CreateBusinessSurveyRequest, CreateBusinessSurveyResponse, SurveySession, UpdateSurveySessionRequest
 from .table_ops import BusinessTable, BusinessSurveyTable, SurveySessionTable
+from agent import langchain_agent
 from boto3.dynamodb.conditions import Key, Attr
 from constant import LLM_PREAMBLE
 from starlette.requests import Request
+import constant
 import uuid
 from datetime import datetime
 
@@ -97,8 +99,16 @@ def get_business_survey_endpoint(survey_name: str):
     return business_survey_table.get_by_survey_name(survey_name)
 
 
-@router.get("/summarize_survey/{survey_id}")
-def summarize_survey(survey_id: str):
+@router.get("/summarize_survey/{presentation_link_id}")
+def summarize_survey(presentation_link_id: str):
+    items = business_survey_table.scan(Attr('presentation_link').eq(f'/presentation/{presentation_link_id}'))
+    if not items:
+        raise HTTPException(status_code=404, detail=f"presentation link id {presentation_link_id} not found")
+    survey_id = items[0]['survey_id']
     # TODO: summarize the summary field or structure summary field
-    return survey_session_table.query(
+    surveys = survey_session_table.query(
         Key('survey_id').eq(survey_id))
+    summarizations = [survey['summary'] for survey in surveys]
+    agent = langchain_agent.LangChainAgent()
+    response = agent.generate_response(constant.GENERATE_INSIGHT_PROMPT.format(content='\n'.join(summarizations)))
+    return response

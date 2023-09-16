@@ -26,6 +26,12 @@ SUMMARIZATION_PROMPT = """
 Please help summarize the chat above.
 """
 
+GENERATE_INSIGHT_PROMPT = """
+Please help generate top 5 insights from these user surveys. Try to identify the issue and propose some solutions based on the context below.
+---
+{content}
+"""
+
 LLM_PREAMBLE_HARDCODE = """
 Your task is to engage the customer in a one-on-one interview, asking them questions to understand their needs and preferences in appropriate to your role and company style. The key is to ask only one question at a time, listen carefully to their response, express empathy, and then proceed to the next question. Don't ask the customer "How can I assist you today". 
 
