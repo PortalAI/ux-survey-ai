@@ -1,7 +1,7 @@
 import boto3
 from typing import Optional, TypeVar, Generic
 from pydantic import BaseModel
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key, Attr
 
 Table = TypeVar('Table', bound=BaseModel)
 
@@ -46,4 +46,33 @@ class DynamoDBTable(Generic[Table]):
             ) 
         return response.get('Items', [])
 
+    def scan(self, filter_expression: Attr, index_name: str | None = None) -> list[dict]:
+        if index_name is not None:
+            response = self.table.scan(
+                IndexName=index_name,
+                FilterExpression=filter_expression
+            )
+        else:
+            response = self.table.scan(
+                FilterExpression=filter_expression
+            )
+
+        items = response.get('Items', [])
+
+        while 'LastEvaluatedKey' in response:
+            if index_name is not None:
+                response = self.table.scan(
+                    IndexName=index_name,
+                    FilterExpression=filter_expression,
+                    ExclusiveStartKey=response['LastEvaluatedKey']
+                )
+            else:
+                response = self.table.scan(
+                    FilterExpression=filter_expression,
+                    ExclusiveStartKey=response['LastEvaluatedKey']
+                )
+
+            items.extend(response.get('Items', []))
+        
+        return items
 

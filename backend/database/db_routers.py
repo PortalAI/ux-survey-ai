@@ -1,7 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from .models import Business, BusinessSurvey, CreateBusinessSurveyRequest, CreateBusinessSurveyResponse, SurveySession, UpdateSurveySessionRequest
 from .table_ops import BusinessTable, BusinessSurveyTable, SurveySessionTable
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key, Attr
 from constant import LLM_PREAMBLE
 from starlette.requests import Request
 import uuid
@@ -69,6 +69,24 @@ def update_survey_session(request: Request, update_request: UpdateSurveySessionR
         session_id=session_id,
         **update_request
     )
+
+@router.get("/survey/{survey_link_id}")
+def find_survey_link_id(survey_link_id: str):
+    items = business_survey_table.scan(Attr('survey_link').eq(f'/chat/{survey_link_id}'))
+    if items:
+        return
+    else:
+        raise HTTPException(status_code=404, detail=f"survey link id {survey_link_id} not found")
+    
+
+@router.get("/presentation/{presentation_link_id}")
+def find_presentation_link_id(presentation_link_id: str):
+    items = business_survey_table.scan(Attr('presentation_link').eq(f'/presentation/{presentation_link_id}'))
+    if items:
+        return
+    else:
+        raise HTTPException(status_code=404, detail=f"presentation link id {presentation_link_id} not found")
+    
 
 @router.get("/business/{business_name}")
 def get_business_endpoint(business_name: str):
