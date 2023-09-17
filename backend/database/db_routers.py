@@ -111,3 +111,12 @@ def summarize_survey(presentation_link_id: str):
     agent = langchain_agent.LangChainAgent()
     response = agent.generate_response(constant.GENERATE_INSIGHT_PROMPT.format(content='\n'.join(summarizations)))
     return response
+
+@router.get("/guide_prompt/{guild_id}")
+def get_prompt_from_guild_id(guild_id: str):
+    items = business_survey_table.scan(Attr('guild_id').eq(guild_id))
+    if not items:
+        raise HTTPException(status_code=404, detail=f"guild id {guild_id} not found")
+    if 'prompt' not in items[0]:
+        raise HTTPException(status_code=404, detail=f"prompt not found for guild id {guild_id}")
+    return items[0].get('prompt')
