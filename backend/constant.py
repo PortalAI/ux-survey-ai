@@ -32,6 +32,31 @@ Please help generate top 5 insights from these user surveys. Try to identify the
 {content}
 """
 
+SUMMARY_ALL = """
+Analyze the data from provided customer interviews conducted by ChatGPT. Your objective is to extract, categorize, and summarize key insights, patterns, and actionable recommendations from the feedback. Provide a concise report that can guide business improvements.
+Steps to Follow:
+Data Parsing:
+Process the raw data from the interviews, categorizing responses into relevant themes.
+Thematic Analysis:
+Use natural language processing to identify major themes or categories from the feedback, such as 'Product Quality', 'Packaging', 'Support', 'UI/UX', and others.
+Pattern Recognition:
+Detect recurring issues, suggestions, or sentiments expressed by multiple customers. Highlight these as major findings.
+Unique Insights Extraction:
+Identify and extract unique feedback or suggestions that offer innovative solutions or new perspectives.
+Quantitative Insights:
+If any feedback has been quantified or can be quantified (e.g., a specific percentage of customers mentioning a particular issue), include these statistics.
+Actionable Recommendations:
+Based on the analyzed feedback, generate a list of clear recommendations for areas of improvement, potential innovations, or changes.
+Summary:
+Provide a concise summary of the major findings, patterns, and recommendations. This should be a brief overview that can be quickly understood by stakeholders.
+End the report with a section titled 'Potential Next Steps' suggesting how the business might act on the insights provided.
+
+
+Here are the compacted customer interviews: 
+{content}
+"""
+
+
 LLM_PREAMBLE_HARDCODE = """
 Your task is to engage the customer in a one-on-one interview, asking them questions to understand their needs and preferences in appropriate to your role and company style. The key is to ask only one question at a time, listen carefully to their response, express empathy, and then proceed to the next question. Don't ask the customer "How can I assist you today". 
 
@@ -72,5 +97,51 @@ If you notice that you have already said goodbye to the client in previous messa
 If you notice that you have already said "thank you" to the client in previous messages and they have said "thank you" to you, you don't need to say "thank you" again. Instead, write the command {skip}.
 
 Don't answer your questions. Wait till I answer them. Dont put numbers on questions. Just ask them and wait for the answer. Starts now!
+
+"""
+
+
+KEY_INSIGHT_HARD_CODE = """
+Customer Feedback Analysis Report
+
+Data Parsing:
+The raw data from the interviews has been processed and categorized into relevant themes such as Gaming Preferences, User Experience with Legionfarm, Feedback and Suggestions, and others.
+
+Major themes identified:
+Gaming Preferences and Experiences
+User Experience with Legionfarm/LFCarry/LF Coaching
+Social Interactions in Gaming
+Feedback and Suggestions for Legionfarm
+Real-life Influence of Gaming
+GGRs and Cashback System
+Teamwork and Strategy in Gaming
+
+Pattern Recognition:
+Positive sentiment towards Legionfarm and its services.
+Appreciation for the opportunity to play with skilled players and learn from professionals.
+Desire for more customization, better matchmaking, and loyalty programs.
+Value of teamwork, communication, and camaraderie in gaming.
+
+Unique Insights Extraction:
+Gaming helped Steven during lockdown, allowing him to connect with friends and improve his IT job skills.
+The user feels that gaming isn't just about playing but also about the experience and time spent together.
+The user's bond with friends extends beyond gaming, as they also watch major sports events together.
+
+Actionable Recommendations:
+Introduce more profile personalization options.
+Improve matchmaking services.
+Introduce a loyalty program for regular users.
+Engage in casual chats before the game to set a relaxed and friendly tone.
+Offer in-depth tutorials or sessions on specific game mechanics.
+Host community events or tournaments.
+
+
+Summary:
+Customers have a generally positive sentiment towards Legionfarm and its services. They value the opportunity to play with skilled players and learn from professionals. There's a strong emphasis on the social aspect of gaming, with many users highlighting the importance of teamwork, communication, and camaraderie. Feedback suggests a desire for more customization, better matchmaking, and loyalty programs. Unique insights highlight the broader impact of gaming on users' lives, from improving job skills to strengthening friendships.
+
+Potential Next Steps:
+Review and implement user feedback on profile personalization and matchmaking.
+Explore the feasibility of introducing a loyalty program.
+Organize more community events or tournaments to further engage the user base.
 
 """

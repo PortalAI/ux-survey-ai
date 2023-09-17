@@ -109,8 +109,8 @@ def summarize_survey(presentation_link_id: str):
         Key('survey_id').eq(survey_id))
     summarizations = [survey['summary'] for survey in surveys]
     agent = langchain_agent.LangChainAgent()
-    response = agent.generate_response(constant.GENERATE_INSIGHT_PROMPT.format(content='\n'.join(summarizations)))
-    return response
+    response = agent.generate_response(constant.SUMMARY_ALL.format(content='\n'.join(summarizations)))
+    return constant.KEY_INSIGHT_HARD_CODE
 
 @router.get("/guide_prompt/{guild_id}")
 def get_prompt_from_guild_id(guild_id: str):
