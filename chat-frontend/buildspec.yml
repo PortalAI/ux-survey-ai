@@ -1,0 +1,36 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+  pre_build:
+    commands:
+      - echo Installing source NPM dependencies...
+      - yarn install --silent
+  build:
+    commands:
+      - echo "Environment variables:"
+      - printenv
+      - echo $REACT_ENV | base64 -d > .env
+      - cat .env
+      - echo Build started on $(date)
+      - yarn build
+      - if [ $? -ne 0 ]; then echo "Build failed. Returned non 0 exit code"; exit 1; fi
+      - zip -r build.zip build
+  post_build:
+    commands:
+      - echo Post Build
+      - ls -al
+      - aws s3 rm s3://$CLOUDFRONT_BUCKET_NAME/ --recursive
+      - aws s3 cp build s3://$CLOUDFRONT_BUCKET_NAME/ --recursive --acl public-read
+      - aws s3 ls $CLOUDFRONT_BUCKET_NAME --recursive
+      - aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths '/*'
+artifacts:
+  files:
+    - "build/*"
+    - "build/**/*"
+    - "build.zip"
+cache:
+  paths:
+    - /root/.cache/yarn/**/*
