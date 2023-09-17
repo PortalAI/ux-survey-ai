@@ -44,8 +44,11 @@ class UpdateSurveySessionRequest(BaseModel):
     survey_id: str
     summary: str | None
     chat_history: str | None
-    structured_summary: dict
-    
-    
+    structured_summary: dict | None
 
+class SaveDiscordChatResultRequest(BaseModel):
+    guild_id: str
+    user_id: str
+    summary: str | None
+    chat_history: str
     

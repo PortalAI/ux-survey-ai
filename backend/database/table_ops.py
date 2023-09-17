@@ -1,3 +1,4 @@
+from typing import Optional
 from .dynamodb_table import DynamoDBTable
 from .models import Business, BusinessSurvey, SurveySession
 from constant import BUSINESS_TABLE_NAME, BUSINESS_SURVEY_TABLE_NAME, SURVEY_SESSION_TABLE_NAME
@@ -28,6 +29,12 @@ class BusinessSurveyTable(DynamoDBTable[BusinessSurvey]):
         )
         return response.get('Items', [])
     
+    def get_survey_from_guild_id(self, guild_id: str) -> list[BusinessSurvey]:
+        response = self.table.scan(FilterExpression=Attr('guild_id').eq(guild_id))
+        if not response:
+            return []
+        return response.get('Items', [])
+
     def get_prompt_from_survey_id(self, survey_id: str) -> str | None:
         surveys = self.table.scan(FilterExpression=Attr('survey_id').eq(survey_id)).get("Items", [])
         if surveys and 'prompt' in surveys[0]:

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from .models import Business, BusinessSurvey, CreateBusinessSurveyRequest, CreateBusinessSurveyResponse, SurveySession, UpdateSurveySessionRequest
+from .models import Business, BusinessSurvey, CreateBusinessSurveyRequest, CreateBusinessSurveyResponse, SurveySession, UpdateSurveySessionRequest, SaveDiscordChatResultRequest
 from .table_ops import BusinessTable, BusinessSurveyTable, SurveySessionTable
 from agent import langchain_agent
 from boto3.dynamodb.conditions import Key, Attr
@@ -114,9 +114,27 @@ def summarize_survey(presentation_link_id: str):
 
 @router.get("/guide_prompt/{guild_id}")
 def get_prompt_from_guild_id(guild_id: str):
-    items = business_survey_table.scan(Attr('guild_id').eq(guild_id))
+    items = business_survey_table.get_survey_from_guild_id(guild_id)
     if not items:
         raise HTTPException(status_code=404, detail=f"guild id {guild_id} not found")
     if 'prompt' not in items[0]:
         raise HTTPException(status_code=404, detail=f"prompt not found for guild id {guild_id}")
     return items[0].get('prompt')
+
+@router.post("/save_discord_chat_result/")
+def save_discord_chat_result(requst_object: SaveDiscordChatResultRequest):
+    items = business_survey_table.get_survey_from_guild_id(requst_object.guild_id)
+    survey_id = items[0]['survey_id']
+    now = datetime.utcnow().isoformat()
+    discord_session_entry = SurveySession(
+        survey_id=survey_id,
+        session_id=requst_object.user_id,
+        summary=requst_object.summary,
+        chat_history = requst_object.chat_history,
+        structured_summary = None,
+        created_at=now,
+        updated_at=now,
+    )
+    survey_session_table.create_item(discord_session_entry)
+    return True
+    
