@@ -24,6 +24,5 @@ yarn-error.log*
 
 # env
 __pycache__
-venv
 .env
-alex_chat.csv
+
