@@ -7,7 +7,7 @@ from config import settings
 Table = TypeVar('Table', bound=BaseModel)
 
 
-dynamodb_resource = boto3.resource('dynamodb', region_name=settings.AWS_DEFAULT_REGION)
+dynamodb_resource = boto3.resource('dynamodb', region_name=settings.DYNAMODB_REGION)
 
 class DynamodbTableBase(Generic[Table]):
 

@@ -11,6 +11,15 @@ class BusinessTable(DynamodbTableBase[database_model.Business]):
         super().__init__(table_name = settings.BUSINESS_TABLE_NAME)
         self.hash_key = "business_id"
 
+    def get_item(self, business_id: str) -> database_model.Business | None:
+        key = {
+            self.hash_key: business_id
+        }
+        entry_dict = super().get_item(key)
+        if entry_dict is None:
+            return None
+        return database_model.Business(**entry_dict)
+
     def get_by_business_name(self, business_name: str) -> Sequence[database_model.Business]:
         response = self.table.query(
             IndexName='business_name_index',
@@ -29,6 +38,6 @@ class BusinessTable(DynamodbTableBase[database_model.Business]):
             expression_attribute_values={
                 ":business_name": business.business_name,
                 ":business_description": business.business_description,
-                ":updated_at": datetime.utcnow().isoformat(),
+                ":updated_at": business.updated_at,
             }
         )

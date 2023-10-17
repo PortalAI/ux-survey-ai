@@ -72,18 +72,23 @@ class GetSurveyResponse(BaseModel):
     survey_description: str
     initial_message: str
 
+class GetSurveyInsightResponse(BaseModel):
+    survey_insight: str
+
 class ListSurveyByBusinessRequest(BaseModel):
     business_id: str
 
-class ListSurveyByBusinessResponse(BaseModel):
+class ListSurveysByBusinessResponse(BaseModel):
     surveys: list[GetSurveyResponse]
 
 ################ Record ################
-class CreataSurveyRecordRequest(BaseModel):
+class CreateSurveyRecordRequest(BaseModel):
     survey_id: str
+    business_id: str
 
 class CreateSurveyRecordResponse(BaseModel):
     survey_id: str
+    record_id: str
 
 class UpdateChatRequest(BaseModel):
     record_id: str
@@ -98,3 +103,11 @@ class GetChatHistoryRequest(BaseModel):
 
 class GetChatHistoryResponse(BaseModel):
     chat_history: chat.ChatHistory
+
+class SendNewMessageRequest(BaseModel):
+    record_id: str
+    survey_id: str
+    message: chat.Message
+
+class SendNewMessageResponse(BaseModel):
+    messages: chat.ChatHistory

@@ -10,6 +10,12 @@ class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.B
     def __init__(self):
         super().__init__(table_name = settings.BUSINESS_SURVEY_TABLE_NAME)
 
+    def get_item(self, survey_id: str) -> dict | None:
+        key = {
+            'survey_id': survey_id
+        }
+        return super().get_item(key)
+
     def get_by_survey_name(self, survey_name: str) -> Sequence[database_model.BusinessSurvey]:
         response = self.table.query(
             IndexName='survey_name_index',
@@ -24,8 +30,6 @@ class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.B
         return response.get('Items', [])
 
     def get_prompt_from_survey_id(self, survey_id: str) -> str | None:
-        surveys = self.table.scan(FilterExpression=Attr('survey_id').eq(survey_id)).get("Items", [])
-        if surveys and 'prompt' in surveys[0]:
-            return surveys[0].get('prompt')
-        return None
+        record = self.get_item(survey_id=survey_id)
+        return record.get("system_prompt")
         

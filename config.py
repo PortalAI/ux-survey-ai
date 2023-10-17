@@ -1,10 +1,9 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    AWS_DEFAULT_REGION: str
+    DYNAMODB_REGION: str
     OPENAI_API_KEY: str
     DEBUG: bool = False
-    DISCORD_TOKEN: str
     SESSION_SECRET_KEY: str
     USER_TABLE_NAME: str
     BUSINESS_TABLE_NAME: str

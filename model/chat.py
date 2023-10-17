@@ -1,8 +1,17 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+from enum import auto
 
+from fastapi_restful.enums import StrEnum
+
+
+class RoleEnum(StrEnum):
+    human = auto()
+    system = auto()
+    ai = auto()
+    
 
 class Message(BaseModel):
-    role: str
+    role: RoleEnum
     content: str
 
 
