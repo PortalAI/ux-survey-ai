@@ -2,7 +2,7 @@ import logging
 from fastapi import FastAPI
 from router.basic_router import router as basic_routers
 from starlette.middleware.sessions import SessionMiddleware
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
 from config import settings
 
 logging.basicConfig()
