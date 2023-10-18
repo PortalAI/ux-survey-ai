@@ -18,3 +18,10 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 2. Create env `python -m venv uxmate-be` and activate `source uxmate-be/bin/activate`
 3. Install dependencies `pip install -r requirements.txt`
 4. Launch server `uvicorn main:app --reload`
+
+
+## Execute the test 
+To execute the test use command like this:
+    `pytest main_test.py::<test name> -s`
+For example:
+    `pytest main_test.py::test_end_2_end_happy_path -s`
