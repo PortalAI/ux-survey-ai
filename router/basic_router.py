@@ -109,7 +109,7 @@ async def get_surveys_list_by_business_id(business_id: str):
     survey_entries = business_survey_table.get_surveys_by_business_id(business_id=business_id)
     # Check if survey found for this business
     if not survey_entries:
-        raise HTTPException(status_code=404, detail=f"not survey found for {business_id=} not found")
+        return service.ListSurveysByBusinessResponse(surveys=[])
 
     return service.ListSurveysByBusinessResponse(
         surveys=[service.GetSurveyResponse(**survey.model_dump()) for survey in survey_entries]
