@@ -129,22 +129,31 @@ async def list_survey_records(survey_id: str):
 @router.post("/survey_record/", response_model=service.GetOrCreateSurveyRecordResponse)
 async def get_create_survey_record(request: service.GetOrCreateSurveyRecordRequest):
     # Checking errors
+    # TODO: verify business and survey together
     if business_table.get_item(request.business_id) is None:
         raise HTTPException(status_code=404, detail=f"{request.business_id=} not found")
     if business_survey_table.get_item(request.survey_id) is None:
         raise HTTPException(status_code=404, detail=f"{request.survey_id=} not found")
     # If FE provided a record_id
     if request.record_id is not None:
+        # check cache first
+        if request.record_id in convo_manager.cache:
+            return service.GetOrCreateSurveyRecordResponse(
+                survey_id=request.survey_id,
+                record_id=request.record_id,
+                chat_history=convo_manager.cache[request.record_id].extract_chat_history_chat_history()
+            )
+        # check DB 
+        # TODO: improve this caching logic
         record_entry = survey_record_table.get_item(request.record_id)
         # first check if that record exist, if not return error
         if record_entry is None:
             raise HTTPException(status_code=404, detail=f"{request.record_id=} not found")
         # If record exist, respond directly
-        else:
-            return service.GetOrCreateSurveyRecordResponse(
-                survey_id=record_entry.survey_id,
-                record_id=record_entry.record_id,
-                chat_history=chat.ChatHistory.from_str(record_entry.chat_history))
+        return service.GetOrCreateSurveyRecordResponse(
+            survey_id=record_entry.survey_id,
+            record_id=record_entry.record_id,
+            chat_history=chat.ChatHistory.from_str(record_entry.chat_history))
 
     # If FE didn't provide record id, create a brand new record.
     # This means the begining of the conversation.
@@ -172,6 +181,12 @@ async def get_survey_summary(record_id: str):
 
 @router.get("/chat_history/{record_id}", response_model=service.GetChatHistoryResponse)
 async def get_chat_history(record_id: str):
+    # check cache first
+    if record_id in convo_manager.cache:
+        return service.GetChatHistoryResponse(
+            chat_history=convo_manager.cache[record_id].extract_chat_history_chat_history()
+        )
+    # if not exist, check DB
     record_entry = survey_record_table.get_item(record_id)
     if record_entry is None:
         raise HTTPException(status_code=404, detail=f"{record_id=} not found")

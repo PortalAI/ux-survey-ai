@@ -104,7 +104,6 @@ def test_end_2_end_happy_path():
         json={
             "business_id": business_id,
             "survey_id": survey_id,
-            "survey_description": "getting to know how our customer welding practice make them more confident and if they have landed a job. if not find out why."
         }
     )
 
@@ -136,6 +135,23 @@ def test_end_2_end_happy_path():
         }
     )
     print(f"got {chat_response.json()}")
+
+    # 5. check chat history from get_history
+    chat_history_response = client.get(f"/chat_history/{record_id}")
+
+    print(f"get chat history got {chat_history_response.json()['chat_history']}")
+    # 6. check chat history from survey_record post endpoint
+    survey_record_info = client.post(
+        "/survey_record/",
+        json={
+            "record_id": record_id,
+            "business_id": business_id,
+            "survey_id": survey_id,
+        }
+    )
+    print(f"post survey_record got {survey_record_info.json()['chat_history']}")
+
+    
 
 def test_get_surveys_by_business_id():
     surveys = client.get(
@@ -169,3 +185,25 @@ def test_list_survey_records():
     )
     print(survey_records.json())
 
+def test_cached_chat():
+    survey_record_info = client.post(
+        "/survey_record/",
+        json={
+            "business_id": "cc103440e63c49488fe2b4e177ab7452",
+            "survey_id": "95abd0de16d848109d50f6967b24718f",
+            "survey_description": "getting to know how our customer welding practice make them more confident and if they have landed a job. if not find out why."
+        }
+    )
+
+    record_id = survey_record_info.json()['record_id']
+    print(f"got {survey_record_info.json()}")
+    survey_record_info = client.post(
+        "/survey_record/",
+        json={
+            "record_id": record_id,
+            "business_id": "cc103440e63c49488fe2b4e177ab7452",
+            "survey_id": "95abd0de16d848109d50f6967b24718f",
+            "survey_description": "getting to know how our customer welding practice make them more confident and if they have landed a job. if not find out why."
+        }
+    )
+    print(f"got {survey_record_info.json()['chat_history']}")
