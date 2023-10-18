@@ -134,15 +134,17 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
     if business_survey_table.get_item(request.survey_id) is None:
         raise HTTPException(status_code=404, detail=f"{request.survey_id=} not found")
     # If FE provided a record_id
-    if request.record_id is not None: 
+    if request.record_id is not None:
         record_entry = survey_record_table.get_item(request.record_id)
         # first check if that record exist, if not return error
         if record_entry is None:
             raise HTTPException(status_code=404, detail=f"{request.record_id=} not found")
         # If record exist, respond directly
         else:
-            record_entry.chat_history
-            return service.GetOrCreateSurveyRecordResponse(**record_entry.model_dump())
+            return service.GetOrCreateSurveyRecordResponse(
+                survey_id=record_entry.survey_id,
+                record_id=record_entry.record_id,
+                chat_history=chat.ChatHistory.from_str(record_entry.chat_history))
 
     # If FE didn't provide record id, create a brand new record.
     # This means the begining of the conversation.
