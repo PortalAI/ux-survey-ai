@@ -19,7 +19,7 @@ class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.B
             return None
         return database_model.BusinessSurvey(**entry_dict)
 
-    def get_by_business_id(self, business_id: str) -> Sequence[database_model.BusinessSurvey]:
+    def get_surveys_by_business_id(self, business_id: str) -> Sequence[database_model.BusinessSurvey]:
         response = self.table.query(
             IndexName='gsi1',
             KeyConditionExpression=Key('business_id').eq(business_id)

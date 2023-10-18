@@ -150,3 +150,23 @@ def test_get_chat_history():
         "/chat_history/b5f96a01186d4b57978a61dc22934c1d"
     )
     print(chat_history.json())
+
+
+def test_record_summary_dummy():
+    record_summary = client.get(
+        "/survey_record/1/summary"
+    )
+    assert record_summary.json().get("chat_summary") == "dummy chat summary, not implemented"
+
+def test_survey_insight_dummy():
+    survey_insight = client.get(
+        "/survey/1/insight"
+    )
+    assert survey_insight.json().get("survey_insight") == "dummy response, not implemented yet"
+
+def test_list_survey_records():
+    survey_records = client.get(
+       "/survey/95abd0de16d848109d50f6967b24718f/records"
+    )
+    print(survey_records.json())
+

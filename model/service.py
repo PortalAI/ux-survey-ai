@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from model import chat
+from model import chat, database_model
 
 
 ################ Business ################
@@ -100,6 +100,9 @@ class UpdateChatRequest(BaseModel):
 class UpdateSurveyRecordResponse(BaseModel):
     pass
 
+class ListSurveyRecordsReponse(BaseModel):
+    records: list[database_model.SurveyRecord]
+
 class GetChatHistoryRequest(BaseModel):
     survey_id: str
     record_id: str
@@ -114,3 +117,7 @@ class SendNewMessageRequest(BaseModel):
 
 class SendNewMessageResponse(BaseModel):
     messages: chat.ChatHistory
+
+class GetSurveyRecordSummaryResponse(BaseModel):
+    record_id: str
+    chat_summary: str

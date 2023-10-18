@@ -91,9 +91,12 @@ async def get_survey(survey_id: str):
 
 # GET /survey/{survey_id}/insight
 # response insight. (wait until all the)
-# @router.get("/survey/{survey_id}/insight", response_model=service.GetSurveyInsightResponse)
-# async def get_survey_insight() :
-#     pass
+@router.get("/survey/{survey_id}/insight", response_model=service.GetSurveyInsightResponse)
+async def get_survey_insight(survey_id: str):
+    return service.GetSurveyInsightResponse(
+        survey_insight="dummy response, not implemented yet"
+    )
+
 
 # list_surveys needed 
 @router.get("/business/{business_id}/survey", response_model=service.ListSurveysByBusinessResponse)
@@ -103,7 +106,7 @@ async def get_surveys_list_by_business_id(business_id: str):
     if business_entry is None:
         raise HTTPException(status_code=404, detail=f"{business_id=} not found")
 
-    survey_entries = business_survey_table.get_by_business_id(business_id=business_id)
+    survey_entries = business_survey_table.get_surveys_by_business_id(business_id=business_id)
     # Check if survey found for this business
     if not survey_entries:
         raise HTTPException(status_code=404, detail=f"not survey found for {business_id=} not found")
@@ -114,9 +117,12 @@ async def get_surveys_list_by_business_id(business_id: str):
 
 # GET /survey/{survey_id}/records
 # get survey id record. pagination, sort. 
-# @router.get("/survey/{survey_id}/records")
-# async def list_records_by_survey(survey_id: str):
-#     pass
+@router.get("/survey/{survey_id}/records", response_model=service.ListSurveyRecordsReponse)
+async def list_survey_records(survey_id: str):
+    # TODO: verify survey exist
+    survey_records = survey_record_table.list_survey_records(survey_id=survey_id)
+    return service.ListSurveyRecordsReponse(records=survey_records)
+    
 
 ####### Record related API #######
 
@@ -157,6 +163,10 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
             chat_history=chat_history_messages,
     )
     
+@router.get("/survey_record/{record_id}/summary", response_model=service.GetSurveyRecordSummaryResponse)
+async def get_survey_summary(record_id: str):    
+    return service.GetSurveyRecordSummaryResponse(record_id=record_id, chat_summary="dummy chat summary, not implemented")
+
 
 @router.get("/chat_history/{record_id}", response_model=service.GetChatHistoryResponse)
 async def get_chat_history(record_id: str):
@@ -167,7 +177,7 @@ async def get_chat_history(record_id: str):
 
 # post /chat/  chat response 
 @router.post("/chat/", response_model=service.SendNewMessageResponse)
-async def get_chat(request: service.SendNewMessageRequest):
+async def chat_with_bot(request: service.SendNewMessageRequest):
     agent = convo_manager.get_agent_from_record(record_id=request.record_id, survey_id=request.survey_id)
     agent.generate_response(request.message.content)
     history = agent.extract_chat_history_chat_history()

@@ -1,5 +1,6 @@
 from model import database_model
 from database import dynamodb_table_base
+from boto3.dynamodb.conditions import Key, Attr
 from datetime import datetime
 from config import settings
 
@@ -42,6 +43,13 @@ class SurveyRecordTable(dynamodb_table_base.DynamodbTableBase[database_model.Sur
             }
         )
 
+    def list_survey_records(self, survey_id: str) -> list[database_model.SurveyRecord]:
+        response = self.query(
+            index_name="gsi1",
+            key_condition_expression=Key("survey_id").eq(survey_id)
+        )
+        results = [database_model.SurveyRecord(**record) for record in response]
+        return results
 
     def update_survey_session(
         self,
