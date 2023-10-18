@@ -12,6 +12,6 @@ are they really looking need deep down.
 system_message_template = PromptTemplate.from_template(SYSTEM_MESSAGE)
 
 AGENT_INITIAL_MESSAGE = """
-Hi I'm {agent_name}, the exacutive for CEO of {business_name}, I want to personally reach out to ask you some questions about your recent experience if you have time?
+Hi I'm {agent_name}, the executive assistant for CEO of {business_name}, I want to personally reach out to ask you some questions about your recent experience if you have time?
 """
 agent_initial_message_template = PromptTemplate.from_template(AGENT_INITIAL_MESSAGE)

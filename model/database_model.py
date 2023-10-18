@@ -22,12 +22,12 @@ class BusinessSurvey(BaseModel):
     survey_id: str = Field(default_factory=lambda: uuid4().hex)
     business_id: str = Field(..., description="Id of the business from which survey belongs to.")
     user_id: list[str]
-    target_audience_description: str
+    target_audience_description: str | None = Field(default=None)
     survey_name: str
     survey_description: str
     system_prompt: str
     initial_message: str
-    assistant_name: str = Field(default="Business name", description="The name BO want to show on top of the chat.")
+    assistant_name: str = Field(default="Assistant", description="The name BO want to show on top of the chat.")
     quota: int
     created_at: str
     updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())

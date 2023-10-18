@@ -38,6 +38,7 @@ class CreateSurveyRequest(BaseModel):
     business_id: str
     survey_name: str
     survey_description: str
+    quota: int = Field(default=1000)
     initial_message: str | None = Field(default=None)
 
 class CreateSurveyResponse(BaseModel):
@@ -82,13 +83,15 @@ class ListSurveysByBusinessResponse(BaseModel):
     surveys: list[GetSurveyResponse]
 
 ################ Record ################
-class CreateSurveyRecordRequest(BaseModel):
+class GetOrCreateSurveyRecordRequest(BaseModel):
     survey_id: str
     business_id: str
+    record_id: str | None = Field(default=None)
 
-class CreateSurveyRecordResponse(BaseModel):
+class GetOrCreateSurveyRecordResponse(BaseModel):
     survey_id: str
     record_id: str
+    chat_history: chat.ChatHistory
 
 class UpdateChatRequest(BaseModel):
     record_id: str

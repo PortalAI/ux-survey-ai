@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException
-from model import service, database_model
+from model import service, database_model, chat
 from database import table_business, table_survey, table_survey_record
 from datetime import datetime
 from agent import conversation_manager, prompt_templates
+from uuid import uuid4
 
 
 business_table = table_business.BusinessTable()
@@ -29,7 +30,8 @@ async def update_business(request: service.UpdateBusinessRequest):
         business_id=request.business_id,
         business_name=request.business_name,
         business_description=request.business_description,
-        user_id=["fake"]
+        user_id=["fake"],
+        created_at=datetime.utcnow().isoformat(),
     )
     ret = business_table.update_business(business_entry)
     return service.UpdateBusinessResponse(**ret)
@@ -37,10 +39,11 @@ async def update_business(request: service.UpdateBusinessRequest):
 @router.get("/business/{business_id}", response_model=service.GetBusinessResponse)
 async def get_business(business_id: str):
 
-    ret = business_table.get_item({'business_id': business_id})
+    ret = business_table.get_item(business_id)
     if ret is None:
         raise HTTPException(status_code=404, detail=f"{business_id=} not found")
-    return service.GetBusinessResponse(**ret)
+    
+    return service.GetBusinessResponse(**ret.model_dump())
     
 
 ####### Survey Related API #######
@@ -63,6 +66,8 @@ async def create_survey(request: service.CreateSurveyRequest):
             business_description=business_info.business_description,
             survey_description=request.survey_description,
         ),
+        quota=request.quota,
+        created_at=datetime.utcnow().isoformat(),
         initial_message=initial_message,
     )
     business_survey_table.create_item(survey_entry)
@@ -74,12 +79,18 @@ async def update_survey(request: service.UpdateSurveyRequest):
     pass
 
 # get_survey needed
-# response insight. (wait until all the)
 @router.get("/survey/{survey_id}", response_model=service.GetSurveyResponse)
 async def get_survey(survey_id: str):
-    pass
+
+    ret = business_survey_table.get_item(survey_id)
+    if ret is None:
+        raise HTTPException(status_code=404, detail=f"{survey_id=} not found")
+    
+    return service.GetSurveyResponse(**ret.model_dump())
+    
 
 # GET /survey/{survey_id}/insight
+# response insight. (wait until all the)
 @router.get("/survey/{survey_id}/insight", response_model=service.GetSurveyInsightResponse)
 async def get_survey_insight() :
     pass
@@ -92,21 +103,47 @@ async def get_surveys_list_by_business_id(business_id: str):
 # GET /survey/{survey_id}/records
 # get survey id record. pagination, sort. 
 @router.get("/survey/{survey_id}/records")
-async def list_records_by_survey():
+async def list_records_by_survey(survey_id: str):
     pass
 
 ####### Record related API #######
 
-@router.post("/survey_record/", response_model=service.CreateSurveyRecordResponse)
-async def create_survey_record(request: service.CreateSurveyRecordRequest):
-    # TODO: verify survey and business exist
+@router.post("/survey_record/", response_model=service.GetOrCreateSurveyRecordResponse)
+async def get_create_survey_record(request: service.GetOrCreateSurveyRecordRequest):
+    # Checking errors
+    if business_table.get_item(request.business_id) is None:
+        raise HTTPException(status_code=404, detail=f"{request.business_id=} not found")
+    if business_survey_table.get_item(request.survey_id) is None:
+        raise HTTPException(status_code=404, detail=f"{request.survey_id=} not found")
+    # If FE provided a record_id
+    if request.record_id is not None: 
+        record_entry = survey_record_table.get_item(request.record_id)
+        # first check if that record exist, if not return error
+        if record_entry is None:
+            raise HTTPException(status_code=404, detail=f"{request.record_id=} not found")
+        # If record exist, respond directly
+        else:
+            record_entry.chat_history
+            return service.GetOrCreateSurveyRecordResponse(**record_entry.model_dump())
+
+    # If FE didn't provide record id, create a brand new record.
+    # This means the begining of the conversation.
+    record_id = uuid4().hex
+    agent = convo_manager.get_agent_from_record(record_id=record_id, survey_id=request.survey_id)
     record_entry = database_model.SurveyRecord(
+        record_id=record_id,
         survey_id=request.survey_id,
         business_id=request.business_id,
-        created_at=datetime.utcnow().isoformat()
+        created_at=datetime.utcnow().isoformat(),
+        chat_history=agent.extract_chat_history_str(),
     )
     survey_record_table.create_item(record_entry)
-    return service.CreateSurveyRecordResponse(**record_entry.model_dump())
+    chat_history_messages: chat.ChatHistory = agent.extract_chat_history_chat_history()
+    return service.GetOrCreateSurveyRecordResponse(
+            survey_id=record_entry.survey_id,
+            record_id=record_entry.record_id,
+            chat_history=chat_history_messages,
+    )
     
 
 @router.get("/chat_history/{record_id}", response_model=service.GetChatHistoryResponse)
@@ -118,7 +155,6 @@ async def get_chat_history(record_id: str):
 @router.post("/chat/", response_model=service.SendNewMessageResponse)
 async def chat(request: service.SendNewMessageRequest):
     agent = convo_manager.get_agent_from_record(record_id=request.record_id, survey_id=request.survey_id)
-    agent.generate_response(request.message)
-    return service.SendNewMessageResponse(message=agent.extract_chat_history())
-
-
+    agent.generate_response(request.message.content)
+    history = agent.extract_chat_history_chat_history()
+    return service.SendNewMessageResponse(messages=history)

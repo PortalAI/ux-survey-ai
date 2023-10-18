@@ -17,3 +17,7 @@ class Message(BaseModel):
 
 class ChatHistory(BaseModel):
     messages: list[Message]
+    
+    @classmethod
+    def from_str(cls) -> "ChatHistory":
+        pass

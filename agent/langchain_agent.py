@@ -5,6 +5,7 @@ import json
 from model import chat
 from langchain.memory.chat_message_histories.in_memory import ChatMessageHistory
 from langchain.schema.messages import SystemMessage, BaseMessage, messages_from_dict, messages_to_dict
+from config import settings
 
 class LangChainAgent:
     def __init__(self, system_message: str | None = None, conversation_history: str | None = None) -> None:
@@ -15,7 +16,7 @@ class LangChainAgent:
             retrieved_chat_history = ChatMessageHistory(messages=retrieved_messages)
             memory = ConversationBufferMemory(chat_memory=retrieved_chat_history)
 
-        model = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-16k")
+        model = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-16k", openai_api_key=settings.OPENAI_API_KEY)
         self._chain = ConversationChain(
             llm=model,
             memory=memory,
@@ -24,7 +25,7 @@ class LangChainAgent:
     def generate_response(self, text) -> str:
         return self._chain.predict(input=text)
 
-    def extract_chat_history(self) -> str:
+    def extract_chat_history_str(self) -> str:
         extracted_messages = self._chain.memory.chat_memory.messages
         ingest_to_db = messages_to_dict(extracted_messages)
         return json.dumps(ingest_to_db)
@@ -34,6 +35,6 @@ class LangChainAgent:
         return chat.Message(role=message.type, content=message.content)
 
 
-    def extract_chat_history(self) -> chat.ChatHistory:
-        messages = self._chain.memory.chat_memory.messages
-        return chat.ChatHistory(messages=[self._message_to_dict(m) for m in messages])
+    def extract_chat_history_chat_history(self) -> chat.ChatHistory:
+        extracted_messages = self._chain.memory.chat_memory.messages
+        return chat.ChatHistory(messages=[self._message_to_dict(m) for m in extracted_messages])
