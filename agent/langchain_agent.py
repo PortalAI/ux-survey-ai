@@ -31,7 +31,7 @@ class LangChainAgent:
         return json.dumps(ingest_to_db)
     
 
-    def _message_to_dict(self, message: BaseMessage) -> chat.Message:
+    def _dict_to_message(self, message: BaseMessage) -> chat.Message:
         return chat.Message(role=message.type, content=message.content)
 
 

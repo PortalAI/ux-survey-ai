@@ -19,12 +19,13 @@ class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.B
             return None
         return database_model.BusinessSurvey(**entry_dict)
 
-    def get_by_survey_name(self, survey_name: str) -> Sequence[database_model.BusinessSurvey]:
+    def get_by_business_id(self, business_id: str) -> Sequence[database_model.BusinessSurvey]:
         response = self.table.query(
-            IndexName='survey_name_index',
-            KeyConditionExpression=Key('survey_name').eq(survey_name)
+            IndexName='gsi1',
+            KeyConditionExpression=Key('business_id').eq(business_id)
         )
-        return response.get('Items', [])
+        res_list = response.get('Items', [])
+        return [database_model.BusinessSurvey(**bs_dict) for bs_dict in res_list]
     
     def get_survey_from_guild_id(self, guild_id: str) -> list[database_model.BusinessSurvey]:
         response = self.table.scan(FilterExpression=Attr('guild_id').eq(guild_id))

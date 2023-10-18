@@ -41,10 +41,10 @@ def test_update_business():
 
 def test_get_business():
     response = client.get(
-        "/business/cef8ea0129c7468da7d5374c4a0ea4bc",
+        "/business/1",
     )
     assert response.status_code == 200
-    assert response.json().get("business_name") == "test biz new name"
+    assert response.json().get("business_name") == "Mike's welding corporation"
 
 # Survey
 def test_create_survey():
@@ -126,3 +126,15 @@ def test_end_2_end_happy_path():
     print(f"got {chat_response.json()}")
 
 
+def test_get_surveys_by_business_id():
+    surveys = client.get(
+        "/business/1/survey"
+    )
+    print(surveys.json())
+
+
+def test_get_chat_history():
+    chat_history = client.get(
+        "/chat_history/b5f96a01186d4b57978a61dc22934c1d"
+    )
+    print(chat_history.json())
