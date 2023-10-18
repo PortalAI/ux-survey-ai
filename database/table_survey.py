@@ -33,7 +33,7 @@ class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.B
             return []
         return response.get('Items', [])
 
-    def get_prompt_from_survey_id(self, survey_id: str) -> str | None:
+    def get_prompt_from_survey_id(self, survey_id: str) -> tuple[str, str] | None:
         record = self.get_item(survey_id=survey_id)
-        return record.system_prompt
+        return record.system_prompt, record.initial_message
         

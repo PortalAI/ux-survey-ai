@@ -8,9 +8,15 @@ from langchain.schema.messages import SystemMessage, BaseMessage, messages_from_
 from config import settings
 
 class LangChainAgent:
-    def __init__(self, system_message: str | None = None, conversation_history: str | None = None) -> None:
+    def __init__(self, 
+                 system_message: str | None = None, 
+                 initial_message: str | None = None,
+                 conversation_history: str | None = None) -> None:
         memory = ConversationBufferMemory()
-        memory.chat_memory.add_message(SystemMessage(content=system_message))
+        if system_message is not None:
+            memory.chat_memory.add_message(SystemMessage(content=system_message))
+        if initial_message is not None:
+            memory.chat_memory.add_ai_message(message=initial_message)
         if conversation_history is not None:
             retrieved_messages = messages_from_dict(conversation_history)
             retrieved_chat_history = ChatMessageHistory(messages=retrieved_messages)
@@ -37,4 +43,4 @@ class LangChainAgent:
 
     def extract_chat_history_chat_history(self) -> chat.ChatHistory:
         extracted_messages = self._chain.memory.chat_memory.messages
-        return chat.ChatHistory(messages=[self._message_to_dict(m) for m in extracted_messages])
+        return chat.ChatHistory(messages=[self._dict_to_message(m) for m in extracted_messages])

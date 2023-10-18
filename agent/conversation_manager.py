@@ -40,6 +40,9 @@ class ConversationManager:
                 return self.cache[record_id]
 
         # if not, get sytem prompt from survey table and create agent from there
-        system_message = survey_table.get_prompt_from_survey_id(survey_id=survey_id)
-        self.cache[record_id] = langchain_agent.LangChainAgent(system_message=system_message)
+        system_message, initial_message = survey_table.get_prompt_from_survey_id(survey_id=survey_id)
+        self.cache[record_id] = langchain_agent.LangChainAgent(
+            system_message=system_message,
+            initial_message=initial_message,
+        )
         return self.cache[record_id]

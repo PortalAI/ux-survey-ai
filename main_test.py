@@ -51,7 +51,7 @@ def test_create_survey():
     response = client.post(
         "/survey/",
         json={
-            "business_id": "cef8ea0129c7468da7d5374c4a0ea4bc",
+            "business_id": "1",
             "survey_name": "test_survey",
             "survey_description": "test survey desc",
             "initial_message": "random random",
@@ -124,7 +124,19 @@ def test_end_2_end_happy_path():
         }
     )
     print(f"got {chat_response.json()}")
-
+    # 4.1 send a second chat
+    chat_response = client.post(
+        "/chat/",
+        json={
+            "record_id": record_id,
+            "survey_id": survey_id,
+            "message": {
+                "role": "human",
+                "content": "How can I help you?"
+            }
+        }
+    )
+    print(f"got {chat_response.json()}")
 
 def test_get_surveys_by_business_id():
     surveys = client.get(

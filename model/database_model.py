@@ -12,7 +12,7 @@ class UserInfo(BaseModel):
 
 class Business(BaseModel):
     business_id: str = Field(default_factory=lambda: uuid4().hex)
-    user_id: list[str]
+    user_id: list[str] = Field(default=[])
     business_name: str
     business_description: str
     created_at: str
