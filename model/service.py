@@ -120,7 +120,7 @@ class UpdateSurveyRecordResponse(BaseModel):
     pass
 
 
-class ListSurveyRecordsReponse(BaseModel):
+class ListSurveyRecordsResponse(BaseModel):
     records: list[database_model.SurveyRecord]
 
 

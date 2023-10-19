@@ -119,11 +119,11 @@ async def get_surveys_list_by_business_id(business_id: str):
 
 # GET /survey/{survey_id}/records
 # get survey id record. pagination, sort. 
-@router.get("/survey/{survey_id}/records", response_model=service.ListSurveyRecordsReponse)
+@router.get("/survey/{survey_id}/records", response_model=service.ListSurveyRecordsResponse)
 async def list_survey_records(survey_id: str):
     # TODO: verify survey exist
     survey_records = survey_record_table.list_survey_records(survey_id=survey_id)
-    return service.ListSurveyRecordsReponse(records=survey_records)
+    return service.ListSurveyRecordsResponse(records=survey_records)
 
 
 ####### Record related API #######
@@ -159,8 +159,8 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
             record_id=record_entry.record_id,
             chat_history=chat.ChatHistory.from_str(record_entry.chat_history))
 
-    # If FE didn't provide record id, create a brand new record.
-    # This means the begining of the conversation.
+    # If FE didn't provide record id, create a brand-new record.
+    # This means the beginning of the conversation.
     record_id = uuid4().hex
     agent = convo_manager.get_agent_from_record(record_id=record_id, survey_id=request.survey_id)
     record_entry = database_model.SurveyRecord(
