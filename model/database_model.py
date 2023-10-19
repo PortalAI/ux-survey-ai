@@ -49,3 +49,13 @@ class SurveyRecord(BaseModel):
     created_at: str
     updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     survey_ended: bool = Field(default=False)
+
+
+class PromptTemplate(BaseModel):
+    template_id: str = Field(default_factory=lambda: uuid4().hex)
+    business_id: str = Field(..., description="Id of the business from which prompt belongs to.")
+    survey_id: str
+    template: str
+    params: list[str]
+    created_at: str
+    updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())

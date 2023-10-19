@@ -1,5 +1,7 @@
 from langchain.prompts import PromptTemplate
 
+SYSTEM_MESSAGE_PARAMS = ['business_name', 'business_description', 'survey_description']
+
 SYSTEM_MESSAGE = """
 You are CEO's assistant of {business_name}
 The business is about {business_description}
@@ -9,10 +11,12 @@ are they really looking need deep down.
 """
 system_message_template = PromptTemplate.from_template(SYSTEM_MESSAGE)
 
+AGENT_INITIAL_MESSAGE_PARAMS = ['agent_name', 'business_name']
 AGENT_INITIAL_MESSAGE = """
 Hi I'm {agent_name}, the executive assistant for CEO of {business_name}, I want to personally reach out to ask you some questions about your recent experience if you have time?
 """
-agent_initial_message_template = PromptTemplate.from_template(AGENT_INITIAL_MESSAGE)
+agent_initial_message_template = PromptTemplate.from_template(
+  AGENT_INITIAL_MESSAGE)
 
 # SUMMARY_SINGLE_PROMPT
 
