@@ -207,3 +207,6 @@ def test_cached_chat():
         }
     )
     print(f"got {survey_record_info.json()['chat_history']}")
+
+
+# TODO: add test for load message from db

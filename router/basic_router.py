@@ -137,7 +137,9 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
     # If FE provided a record_id
     if request.record_id is not None:
         # check cache first
+        
         if request.record_id in convo_manager.cache:
+
             return service.GetOrCreateSurveyRecordResponse(
                 survey_id=request.survey_id,
                 record_id=request.record_id,
@@ -150,6 +152,7 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
         if record_entry is None:
             raise HTTPException(status_code=404, detail=f"{request.record_id=} not found")
         # If record exist, respond directly
+
         return service.GetOrCreateSurveyRecordResponse(
             survey_id=record_entry.survey_id,
             record_id=record_entry.record_id,

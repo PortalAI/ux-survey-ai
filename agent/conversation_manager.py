@@ -34,7 +34,7 @@ class ConversationManager:
         survey_record = survey_record_table.get_item(record_id=record_id)
         # if it does, create agent from history
         if survey_record is not None:
-            chat_history = survey_record.get("chat_history", None)
+            chat_history = survey_record.chat_history
             if chat_history is not None:
                 self.cache[record_id] = langchain_agent.LangChainAgent(conversation_history=chat_history)
                 return self.cache[record_id]

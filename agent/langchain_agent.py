@@ -18,7 +18,7 @@ class LangChainAgent:
         if initial_message is not None:
             memory.chat_memory.add_ai_message(message=initial_message)
         if conversation_history is not None:
-            retrieved_messages = messages_from_dict(conversation_history)
+            retrieved_messages = messages_from_dict(json.loads(conversation_history))
             retrieved_chat_history = ChatMessageHistory(messages=retrieved_messages)
             memory = ConversationBufferMemory(chat_memory=retrieved_chat_history)
 
