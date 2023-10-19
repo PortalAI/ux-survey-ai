@@ -1,8 +1,4 @@
 from pydantic import BaseModel, Field
-
-from agent.prompt_templates import SYSTEM_MESSAGE, SYSTEM_MESSAGE_PARAMS, AGENT_INITIAL_MESSAGE, \
-    AGENT_INITIAL_MESSAGE_PARAMS, SUMMARY_SINGLE_PROMPT, SUMMARY_SINGLE_PROMPT_PARAMS, GET_INSIGHT_PROMPT, \
-    GET_INSIGHT_PROMPT_PARAMS
 from model import chat, database_model
 
 
@@ -168,14 +164,14 @@ class CreateTemplateRequest(BaseModel):
 class CreateTemplateResponse(BaseModel):
     template_id: str
     survey_id: str
-    system_message: str | None
-    system_message_params: list[str] | None
-    agent_initial_message: str | None
+    system_message: str
+    system_message_params: list[str]
+    agent_initial_message: str
     agent_initial_message_params: list[str]
-    summary_single_prompt: str | None
-    summary_single_prompt_params: list[str] | None
-    get_insight_prompt: str | None
-    get_insight_prompt_params: list[str] | None
+    summary_single_prompt: str
+    summary_single_prompt_params: list[str]
+    get_insight_prompt: str
+    get_insight_prompt_params: list[str]
 
 
 class UpdateTemplateRequest(BaseModel):
