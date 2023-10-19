@@ -1,14 +1,13 @@
 from model import database_model
 from database import dynamodb_table_base
-from boto3.dynamodb.conditions import Key, Attr
+from boto3.dynamodb.conditions import Key
 from datetime import datetime
 from config import settings
 
 
-
 class SurveyRecordTable(dynamodb_table_base.DynamodbTableBase[database_model.SurveyRecord]):
     def __init__(self):
-        super().__init__(table_name = settings.SURVEY_RECORD_TABLE_NAME)
+        super().__init__(table_name=settings.SURVEY_RECORD_TABLE_NAME)
 
     def initiate_survey_session(self, survey_id: str, session_id: str):
         survey_session_entry = database_model.SurveyRecord(
@@ -69,5 +68,3 @@ class SurveyRecordTable(dynamodb_table_base.DynamodbTableBase[database_model.Sur
                 ":updated_at": datetime.utcnow().isoformat(),
             }
         )
-
-

@@ -16,19 +16,22 @@ app.add_middleware(
 )
 
 app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/")
 async def root():
     return {"message": "Hello World", "version": "0.2.1"}
 
+
 @app.get("/health_check")
 async def health_check():
     return {"message": "server is healthy"}
+
 
 app.include_router(basic_routers)

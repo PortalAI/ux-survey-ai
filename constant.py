@@ -1,5 +1,3 @@
-
-
 LLM_PREAMBLE = """
 Business name is {business_name}
 Business is about {business_description}
@@ -40,7 +38,6 @@ End the report with a section titled 'Potential Next Steps' suggesting how the b
 Here are the compacted customer interviews: 
 {content}
 """
-
 
 LLM_PREAMBLE_HARDCODE = """
 Your task is to engage the customer in a one-on-one interview, asking them questions to understand their needs and preferences in appropriate to your role and company style. The key is to ask only one question at a time, listen carefully to their response, express empathy, and then proceed to the next question. Don't ask the customer "How can I assist you today". 
@@ -84,7 +81,6 @@ If you notice that you have already said "thank you" to the client in previous m
 Don't answer your questions. Wait till I answer them. Dont put numbers on questions. Just ask them and wait for the answer. Starts now!
 
 """
-
 
 KEY_INSIGHT_HARD_CODE = """
 Customer Feedback Analysis Report
