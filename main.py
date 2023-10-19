@@ -1,6 +1,7 @@
 import logging
 from fastapi import FastAPI
 from router.basic_router import router as basic_routers
+from router.template_router import router as template_router
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from config import settings
@@ -35,3 +36,4 @@ async def health_check():
 
 
 app.include_router(basic_routers)
+app.include_router(template_router)

@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     BUSINESS_TABLE_NAME: str
     BUSINESS_SURVEY_TABLE_NAME: str
     SURVEY_RECORD_TABLE_NAME: str
+    TEMPLATE_TABLE_NAME: str
 
     class Config:
         env_file = ".env"
