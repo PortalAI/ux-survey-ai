@@ -1,8 +1,5 @@
 # Backend
 
-## Requirements
-python version 3.11.6
-
 ## How to launch server using Docker
 1. Install docker 
 2. Build docker image `docker build -t app .`
