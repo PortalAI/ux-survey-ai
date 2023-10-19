@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from uuid import uuid4
 from datetime import datetime
 
+
 class UserInfo(BaseModel):
     user_id: str
     username: str
@@ -18,6 +19,7 @@ class Business(BaseModel):
     created_at: str
     updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
+
 class BusinessSurvey(BaseModel):
     survey_id: str = Field(default_factory=lambda: uuid4().hex)
     business_id: str = Field(..., description="Id of the business from which survey belongs to.")
@@ -31,6 +33,7 @@ class BusinessSurvey(BaseModel):
     quota: int
     created_at: str
     updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+
 
 class SurveyRecord(BaseModel):
     record_id: str = Field(default_factory=lambda: uuid4().hex)

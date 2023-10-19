@@ -8,7 +8,7 @@ class RoleEnum(StrEnum):
     human = auto()
     system = auto()
     ai = auto()
-    
+
 
 class Message(BaseModel):
     role: RoleEnum
@@ -17,7 +17,7 @@ class Message(BaseModel):
 
 class ChatHistory(BaseModel):
     messages: list[Message]
-    
+
     @classmethod
     def from_str(cls, chat_history_str: str) -> "ChatHistory":
         chat_messages: list[dict] = json.loads(chat_history_str)

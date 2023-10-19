@@ -6,8 +6,8 @@ from config import settings
 
 Table = TypeVar('Table', bound=BaseModel)
 
-
 dynamodb_resource = boto3.resource('dynamodb', region_name=settings.DYNAMODB_REGION)
+
 
 class DynamodbTableBase(Generic[Table]):
 
@@ -17,7 +17,6 @@ class DynamodbTableBase(Generic[Table]):
 
     def create_item(self, item: Table) -> None:
         self.table.put_item(Item=item.model_dump())
-
 
     def get_item(self, key: dict) -> Optional[dict]:
         response = self.table.get_item(Key=key)
@@ -45,7 +44,7 @@ class DynamodbTableBase(Generic[Table]):
         else:
             response = self.table.query(
                 KeyConditionExpression=key_condition_expression
-            ) 
+            )
         return response.get('Items', [])
 
     def scan(self, filter_expression: Attr, index_name: str | None = None) -> list[dict]:
@@ -75,6 +74,5 @@ class DynamodbTableBase(Generic[Table]):
                 )
 
             items.extend(response.get('Items', []))
-        
-        return items
 
+        return items

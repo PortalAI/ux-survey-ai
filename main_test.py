@@ -1,15 +1,16 @@
 from fastapi.testclient import TestClient
 
-
 from main import app
 
 client = TestClient(app)
 
+
 def test_health_check():
     response = client.get("/health_check")
-    
+
     assert response.status_code == 200
     assert response.json() == {"message": "server is healthy"}
+
 
 # Business
 def test_create_business():
@@ -22,6 +23,7 @@ def test_create_business():
     assert response.json().get("business_name") == "test biz name"
     assert response.json().get("business_description") == "test biz description"
 
+
 def test_update_business():
     biz_name = "test biz new name"
     biz_desc = "test biz new description"
@@ -29,7 +31,7 @@ def test_update_business():
         "/business/",
         headers={"X-Token": "coneofsilence"},
         json={
-            "business_id":"cef8ea0129c7468da7d5374c4a0ea4bc",
+            "business_id": "cef8ea0129c7468da7d5374c4a0ea4bc",
             "business_name": biz_name,
             "business_description": biz_desc
         },
@@ -38,12 +40,14 @@ def test_update_business():
     assert response.json().get("business_name") == biz_name
     assert response.json().get("business_description") == biz_desc
 
+
 def test_get_business():
     response = client.get(
         "/business/1",
     )
     assert response.status_code == 200
     assert response.json().get("business_name") == "Mike's welding corporation"
+
 
 # Survey
 def test_create_survey():
@@ -151,7 +155,6 @@ def test_end_2_end_happy_path():
     )
     print(f"post survey_record got {survey_record_info.json()['chat_history']}")
 
-    
 
 def test_get_surveys_by_business_id():
     surveys = client.get(
@@ -173,17 +176,20 @@ def test_record_summary_dummy():
     )
     assert record_summary.json().get("chat_summary") == "dummy chat summary, not implemented"
 
+
 def test_survey_insight_dummy():
     survey_insight = client.get(
         "/survey/1/insight"
     )
     assert survey_insight.json().get("survey_insight") == "dummy response, not implemented yet"
 
+
 def test_list_survey_records():
     survey_records = client.get(
-       "/survey/95abd0de16d848109d50f6967b24718f/records"
+        "/survey/95abd0de16d848109d50f6967b24718f/records"
     )
     print(survey_records.json())
+
 
 def test_cached_chat():
     survey_record_info = client.post(
@@ -207,6 +213,5 @@ def test_cached_chat():
         }
     )
     print(f"got {survey_record_info.json()['chat_history']}")
-
 
 # TODO: add test for load message from db

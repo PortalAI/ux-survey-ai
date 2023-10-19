@@ -5,13 +5,14 @@ from datetime import datetime
 from agent import conversation_manager, prompt_templates
 from uuid import uuid4
 
-
 business_table = table_business.BusinessTable()
 business_survey_table = table_survey.BusinessSurveyTable()
 survey_record_table = table_survey_record.SurveyRecordTable()
 convo_manager = conversation_manager.ConversationManager(cache_size=100, ttl=100)
 
 router = APIRouter()
+
+
 ####### Business related API #######
 @router.post("/business/", response_model=service.CreateBusinessResponse)
 async def create_business(request: service.CreateBusinessRequest):
@@ -23,7 +24,8 @@ async def create_business(request: service.CreateBusinessRequest):
     )
     business_table.create_item(business_entry)
     return service.CreateBusinessResponse(**business_entry.model_dump())
-    
+
+
 @router.put("/business/", response_model=service.UpdateBusinessResponse)
 async def update_business(request: service.UpdateBusinessRequest):
     business_entry = database_model.Business(
@@ -35,27 +37,27 @@ async def update_business(request: service.UpdateBusinessRequest):
     )
     ret = business_table.update_business(business_entry)
     return service.UpdateBusinessResponse(**ret)
-    
+
+
 @router.get("/business/{business_id}", response_model=service.GetBusinessResponse)
 async def get_business(business_id: str):
-
     ret = business_table.get_item(business_id)
     if ret is None:
         raise HTTPException(status_code=404, detail=f"{business_id=} not found")
-    
+
     return service.GetBusinessResponse(**ret.model_dump())
-    
+
 
 ####### Survey Related API #######
 @router.post("/survey/", response_model=service.CreateSurveyResponse)
 async def create_survey(request: service.CreateSurveyRequest):
     business_info = business_table.get_item(request.business_id)
-    initial_message = (request.initial_message 
+    initial_message = (request.initial_message
                        if request.initial_message is not None
                        else prompt_templates.agent_initial_message_template.format(
-                           agent_name="Coco",
-                           business_name=business_info.business_name,
-                       ))
+        agent_name="Coco",
+        business_name=business_info.business_name,
+    ))
     survey_entry = database_model.BusinessSurvey(
         user_id=["fake"],
         business_id=request.business_id,
@@ -81,13 +83,12 @@ async def create_survey(request: service.CreateSurveyRequest):
 # get_survey needed
 @router.get("/survey/{survey_id}", response_model=service.GetSurveyResponse)
 async def get_survey(survey_id: str):
-
     ret = business_survey_table.get_item(survey_id)
     if ret is None:
         raise HTTPException(status_code=404, detail=f"{survey_id=} not found")
-    
+
     return service.GetSurveyResponse(**ret.model_dump())
-    
+
 
 # GET /survey/{survey_id}/insight
 # response insight. (wait until all the)
@@ -115,6 +116,7 @@ async def get_surveys_list_by_business_id(business_id: str):
         surveys=[service.GetSurveyResponse(**survey.model_dump()) for survey in survey_entries]
     )
 
+
 # GET /survey/{survey_id}/records
 # get survey id record. pagination, sort. 
 @router.get("/survey/{survey_id}/records", response_model=service.ListSurveyRecordsReponse)
@@ -122,7 +124,7 @@ async def list_survey_records(survey_id: str):
     # TODO: verify survey exist
     survey_records = survey_record_table.list_survey_records(survey_id=survey_id)
     return service.ListSurveyRecordsReponse(records=survey_records)
-    
+
 
 ####### Record related API #######
 
@@ -137,9 +139,8 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
     # If FE provided a record_id
     if request.record_id is not None:
         # check cache first
-        
-        if request.record_id in convo_manager.cache:
 
+        if request.record_id in convo_manager.cache:
             return service.GetOrCreateSurveyRecordResponse(
                 survey_id=request.survey_id,
                 record_id=request.record_id,
@@ -172,14 +173,16 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
     survey_record_table.create_item(record_entry)
     chat_history_messages: chat.ChatHistory = agent.extract_chat_history_chat_history()
     return service.GetOrCreateSurveyRecordResponse(
-            survey_id=record_entry.survey_id,
-            record_id=record_entry.record_id,
-            chat_history=chat_history_messages,
+        survey_id=record_entry.survey_id,
+        record_id=record_entry.record_id,
+        chat_history=chat_history_messages,
     )
-    
+
+
 @router.get("/survey_record/{record_id}/summary", response_model=service.GetSurveyRecordSummaryResponse)
-async def get_survey_summary(record_id: str):    
-    return service.GetSurveyRecordSummaryResponse(record_id=record_id, chat_summary="dummy chat summary, not implemented")
+async def get_survey_summary(record_id: str):
+    return service.GetSurveyRecordSummaryResponse(record_id=record_id,
+                                                  chat_summary="dummy chat summary, not implemented")
 
 
 @router.get("/chat_history/{record_id}", response_model=service.GetChatHistoryResponse)
@@ -195,7 +198,8 @@ async def get_chat_history(record_id: str):
         raise HTTPException(status_code=404, detail=f"{record_id=} not found")
     return service.GetChatHistoryResponse(chat_history=chat.ChatHistory.from_str(record_entry.chat_history))
 
-# post /chat/  chat response 
+
+# post /chat/  chat response
 @router.post("/chat/", response_model=service.SendNewMessageResponse)
 async def chat_with_bot(request: service.SendNewMessageRequest):
     agent = convo_manager.get_agent_from_record(record_id=request.record_id, survey_id=request.survey_id)

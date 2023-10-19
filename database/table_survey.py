@@ -5,10 +5,9 @@ from collections.abc import Sequence
 from config import settings
 
 
-
 class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.BusinessSurvey]):
     def __init__(self):
-        super().__init__(table_name = settings.BUSINESS_SURVEY_TABLE_NAME)
+        super().__init__(table_name=settings.BUSINESS_SURVEY_TABLE_NAME)
 
     def get_item(self, survey_id: str) -> database_model.BusinessSurvey | None:
         key = {
@@ -26,7 +25,7 @@ class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.B
         )
         res_list = response.get('Items', [])
         return [database_model.BusinessSurvey(**bs_dict) for bs_dict in res_list]
-    
+
     def get_survey_from_guild_id(self, guild_id: str) -> list[database_model.BusinessSurvey]:
         response = self.table.scan(FilterExpression=Attr('guild_id').eq(guild_id))
         if not response:
@@ -36,4 +35,3 @@ class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.B
     def get_prompt_from_survey_id(self, survey_id: str) -> tuple[str, str] | None:
         record = self.get_item(survey_id=survey_id)
         return record.system_prompt, record.initial_message
-        

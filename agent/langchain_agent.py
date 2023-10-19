@@ -7,11 +7,12 @@ from langchain.memory.chat_message_histories.in_memory import ChatMessageHistory
 from langchain.schema.messages import SystemMessage, BaseMessage, messages_from_dict, messages_to_dict
 from config import settings
 
+
 class LangChainAgent:
-    def __init__(self, 
-                 system_message: str | None = None, 
-                 initial_message: str | None = None,
-                 conversation_history: str | None = None) -> None:
+    def __init__(self,
+        system_message: str | None = None,
+        initial_message: str | None = None,
+        conversation_history: str | None = None) -> None:
         memory = ConversationBufferMemory()
         if system_message is not None:
             memory.chat_memory.add_message(SystemMessage(content=system_message))
@@ -35,11 +36,9 @@ class LangChainAgent:
         extracted_messages = self._chain.memory.chat_memory.messages
         ingest_to_db = messages_to_dict(extracted_messages)
         return json.dumps(ingest_to_db)
-    
 
     def _dict_to_message(self, message: BaseMessage) -> chat.Message:
         return chat.Message(role=message.type, content=message.content)
-
 
     def extract_chat_history_chat_history(self) -> chat.ChatHistory:
         extracted_messages = self._chain.memory.chat_memory.messages
