@@ -27,3 +27,5 @@ yarn-error.log*
 __pycache__
 .env
 .vscode
+
+uxmate-be
