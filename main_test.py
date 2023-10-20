@@ -229,7 +229,6 @@ def test_create_template():
 
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    print(data['template_id'])
     assert data.pop("template_id")  # check if template_id is returned
     assert data == {
         "survey_id": "1",
