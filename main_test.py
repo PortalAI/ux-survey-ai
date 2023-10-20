@@ -281,11 +281,12 @@ def test_get_template():
 def test_get_template_by_servey_id():
     client.post("template/", json={"survey_id": "1"})
 
-    response = client.get(
-        "/survey/1/template",
-    )
+    response = client.get("/survey/1/template")
     assert response.status_code == status.HTTP_200_OK
     assert response.json().get('system_message') == prompt_templates.SYSTEM_MESSAGE
+
+    # not found
+    assert client.get("/survey/2/template").status_code == status.HTTP_404_NOT_FOUND
 
 # TODO: add test for load message from db
 # todo there has to be internal error logging for each request
