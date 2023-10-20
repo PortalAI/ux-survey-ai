@@ -278,7 +278,7 @@ def test_get_template():
     assert client.get("/template/1").status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_get_template_by_servey_id():
+def test_get_template_by_survey_id():
     client.post("template/", json={"survey_id": "1"})
 
     response = client.get("/survey/1/template")
