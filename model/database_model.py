@@ -1,10 +1,7 @@
 from pydantic import BaseModel, Field
 from uuid import uuid4
 from datetime import datetime
-
-from agent.prompt_templates import SYSTEM_MESSAGE, SYSTEM_MESSAGE_PARAMS, AGENT_INITIAL_MESSAGE, \
-    AGENT_INITIAL_MESSAGE_PARAMS, SUMMARY_SINGLE_PROMPT, SUMMARY_SINGLE_PROMPT_PARAMS, GET_INSIGHT_PROMPT, \
-    GET_INSIGHT_PROMPT_PARAMS
+from agent import prompt_templates
 
 
 class UserInfo(BaseModel):
@@ -59,14 +56,14 @@ class Template(BaseModel):
     template_id: str = Field(default_factory=lambda: uuid4().hex)
     survey_id: str
 
-    system_message: str | None = Field(default=SYSTEM_MESSAGE)
-    system_message_params: list[str] | None = Field(default=SYSTEM_MESSAGE_PARAMS)
+    system_message: str | None = Field(default=prompt_templates.SYSTEM_MESSAGE)
+    system_message_params: list[str] | None = Field(default=prompt_templates.SYSTEM_MESSAGE_PARAMS)
 
-    agent_initial_message: str | None = Field(default=AGENT_INITIAL_MESSAGE)
-    agent_initial_message_params: list[str] | None = Field(default=AGENT_INITIAL_MESSAGE_PARAMS)
+    agent_initial_message: str | None = Field(default=prompt_templates.AGENT_INITIAL_MESSAGE)
+    agent_initial_message_params: list[str] | None = Field(default=prompt_templates.AGENT_INITIAL_MESSAGE_PARAMS)
 
-    summary_single_prompt: str | None = Field(default=SUMMARY_SINGLE_PROMPT)
-    summary_single_prompt_params: list[str] | None = Field(default=SUMMARY_SINGLE_PROMPT_PARAMS)
+    summary_single_prompt: str | None = Field(default=prompt_templates.SUMMARY_SINGLE_PROMPT)
+    summary_single_prompt_params: list[str] | None = Field(default=prompt_templates.SUMMARY_SINGLE_PROMPT_PARAMS)
 
-    get_insight_prompt: str | None = Field(default=GET_INSIGHT_PROMPT)
-    get_insight_prompt_params: list[str] | None = Field(default=GET_INSIGHT_PROMPT_PARAMS)
+    get_insight_prompt: str | None = Field(default=prompt_templates.GET_INSIGHT_PROMPT)
+    get_insight_prompt_params: list[str] | None = Field(default=prompt_templates.GET_INSIGHT_PROMPT_PARAMS)

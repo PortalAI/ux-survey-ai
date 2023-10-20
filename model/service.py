@@ -151,14 +151,14 @@ class GetSurveyRecordSummaryResponse(BaseModel):
 ################ Template ################
 class CreateTemplateRequest(BaseModel):
     survey_id: str
-    system_message: str | None
-    system_message_params: list[str] | None
-    agent_initial_message: str | None
-    agent_initial_message_params: list[str]
-    summary_single_prompt: str | None
-    summary_single_prompt_params: list[str] | None
-    get_insight_prompt: str | None
-    get_insight_prompt_params: list[str] | None
+    system_message: str | None = Field(default=None)
+    system_message_params: list[str] | None = Field(default=None)
+    agent_initial_message: str | None = Field(default=None)
+    agent_initial_message_params: list[str] = Field(default=None)
+    summary_single_prompt: str | None = Field(default=None)
+    summary_single_prompt_params: list[str] | None = Field(default=None)
+    get_insight_prompt: str | None = Field(default=None)
+    get_insight_prompt_params: list[str] | None = Field(default=None)
 
 
 class CreateTemplateResponse(BaseModel):

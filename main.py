@@ -1,4 +1,6 @@
 import logging
+
+import uvicorn
 from fastapi import FastAPI
 from router.basic_router import router as basic_routers
 from router.template_router import router as template_router

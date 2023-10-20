@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
-
+from fastapi import status
+from agent import prompt_templates
 from main import app
 
 client = TestClient(app)
@@ -8,7 +9,7 @@ client = TestClient(app)
 def test_health_check():
     response = client.get("/health_check")
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert response.json() == {"message": "server is healthy"}
 
 
@@ -19,33 +20,35 @@ def test_create_business():
         headers={"X-Token": "coneofsilence"},
         json={"business_name": "test biz name", "business_description": "test biz description"},
     )
-    assert response.status_code == 200
-    assert response.json().get("business_name") == "test biz name"
-    assert response.json().get("business_description") == "test biz description"
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data.pop("business_id")  # check if business_id is returned
+    assert data == {
+        "business_name": "test biz name",
+        "business_description": "test biz description"
+    }
 
 
 def test_update_business():
-    biz_name = "test biz new name"
-    biz_desc = "test biz new description"
+    update_data = {
+        "business_id": "cef8ea0129c7468da7d5374c4a0ea4bc",
+        "business_name": "test biz new name",
+        "business_description": "test biz new description"
+    }
     response = client.put(
         "/business/",
         headers={"X-Token": "coneofsilence"},
-        json={
-            "business_id": "cef8ea0129c7468da7d5374c4a0ea4bc",
-            "business_name": biz_name,
-            "business_description": biz_desc
-        },
+        json=update_data
     )
-    assert response.status_code == 200
-    assert response.json().get("business_name") == biz_name
-    assert response.json().get("business_description") == biz_desc
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == update_data
 
 
 def test_get_business():
     response = client.get(
         "/business/1",
     )
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert response.json().get("business_name") == "Mike's welding corporation"
 
 
@@ -60,7 +63,7 @@ def test_create_survey():
             "initial_message": "random random",
         }
     )
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert response.json().get("initial_message") == "random random"
 
 
@@ -214,4 +217,67 @@ def test_cached_chat():
     )
     print(f"got {survey_record_info.json()['chat_history']}")
 
+
+def test_create_template():
+    response = client.post(
+        '/template/',
+        json={
+            # todo make sure survey id is present in the db
+            "survey_id": "1",
+        }
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    print(data['template_id'])
+    assert data.pop("template_id")  # check if template_id is returned
+    assert data == {
+        "survey_id": "1",
+        'system_message': prompt_templates.SYSTEM_MESSAGE,
+        'system_message_params': prompt_templates.SYSTEM_MESSAGE_PARAMS,
+        'agent_initial_message': prompt_templates.AGENT_INITIAL_MESSAGE,
+        'agent_initial_message_params': prompt_templates.AGENT_INITIAL_MESSAGE_PARAMS,
+        'summary_single_prompt': prompt_templates.SUMMARY_SINGLE_PROMPT,
+        'summary_single_prompt_params': prompt_templates.SUMMARY_SINGLE_PROMPT_PARAMS,
+        'get_insight_prompt': prompt_templates.GET_INSIGHT_PROMPT,
+        'get_insight_prompt_params': prompt_templates.GET_INSIGHT_PROMPT_PARAMS,
+    }
+    # todo does test actually create a template in the db?
+
+
+def test_update_template():
+    update_data = {
+        "template_id": "7e6af56c90524f149362d2379caf2d04",
+        "survey_id": "1",
+        "system_message": "new system message",
+        "system_message_params": ["new system message params"],
+        "agent_initial_message": "new agent initial message",
+        "agent_initial_message_params": ["new agent initial message params"],
+        "summary_single_prompt": "new summary single prompt",
+        "summary_single_prompt_params": ["new summary single prompt params"],
+        "get_insight_prompt": "new get insight prompt",
+        "get_insight_prompt_params": ["new get insight prompt params"],
+    }
+    response = client.put(
+        '/template/',
+        json=update_data
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == update_data
+
+
+def test_get_template():
+
+    # from previous test
+    response = client.get(
+        "/template/7e6af56c90524f149362d2379caf2d04",
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json().get('system_message') == "new system message"
+
+    # not found
+    assert client.get("/template/1").status_code == status.HTTP_404_NOT_FOUND
+
 # TODO: add test for load message from db
+# todo there has to be internal error logging for each request

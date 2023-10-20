@@ -33,7 +33,7 @@ class TemplateTable(DynamodbTableBase[database_model.Template]):
                 "summary_single_prompt = :summary_single_prompt, "
                 "summary_single_prompt_params = :summary_single_prompt_params, "
                 "get_insight_prompt = :get_insight_prompt, "
-                "get_insight_prompt_params = :get_insight_prompt_params, "
+                "get_insight_prompt_params = :get_insight_prompt_params"
             ),
             expression_attribute_values={
                 ":survey_id": template.survey_id,

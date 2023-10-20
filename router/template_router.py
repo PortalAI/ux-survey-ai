@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from fastapi import APIRouter, HTTPException
 from model import service, database_model
 
@@ -12,25 +10,17 @@ router = APIRouter()
 
 @router.post("/template/", response_model=service.CreateTemplateResponse)
 async def create_template(request: service.CreateTemplateRequest):
-    system_message = None if request.system_message is None else request.system_message
-    system_message_params = None if request.system_message_params is None else request.system_message_params
-    agent_initial_message = None if request.agent_initial_message is None else request.agent_initial_message
-    agent_initial_message_params = None if request.agent_initial_message_params is None else request.agent_initial_message_params
-    summary_single_prompt = None if request.summary_single_prompt is None else request.summary_single_prompt
-    summary_single_prompt_params = None if request.summary_single_prompt_params is None else request.summary_single_prompt_params
-    get_insight_prompt = None if request.get_insight_prompt is None else request.get_insight_prompt
-    get_insight_prompt_params = None if request.get_insight_prompt_params is None else request.get_insight_prompt_params
-
+    # todo see why setting default to None doesn't work
     template_entry = database_model.Template(
         survey_id=request.survey_id,
-        system_message=system_message,
-        system_message_params=system_message_params,
-        agent_initial_message=agent_initial_message,
-        agent_initial_message_params=agent_initial_message_params,
-        summary_single_prompt=summary_single_prompt,
-        summary_single_prompt_params=summary_single_prompt_params,
-        get_insight_prompt=get_insight_prompt,
-        get_insight_prompt_params=get_insight_prompt_params,
+        # system_message=request.system_message,
+        # system_message_params=request.system_message_params,
+        # agent_initial_message=request.agent_initial_message,
+        # agent_initial_message_params=request.agent_initial_message_params,
+        # summary_single_prompt=request.summary_single_prompt,
+        # summary_single_prompt_params=request.summary_single_prompt_params,
+        # get_insight_prompt=request.get_insight_prompt,
+        # get_insight_prompt_params=request.get_insight_prompt_params,
     )
     template_table.create_item(template_entry)
     return service.CreateTemplateResponse(**template_entry.model_dump())
