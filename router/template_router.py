@@ -28,6 +28,9 @@ async def create_template(request: service.CreateTemplateRequest):
 
 @router.put("/template/", response_model=service.UpdateTemplateResponse)
 async def update_template(request: service.UpdateTemplateRequest):
+
+    # todo verify that params are present in the templates or return error
+
     template_entry = database_model.Template(
         template_id=request.template_id,
         survey_id=request.survey_id,
