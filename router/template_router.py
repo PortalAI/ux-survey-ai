@@ -54,3 +54,12 @@ async def get_template(template_id: str):
         raise HTTPException(status_code=404, detail=f"{template_id=} not found")
 
     return service.GetTemplateResponse(**ret.model_dump())
+
+
+@router.get("/survey/{survey_id}/template", response_model=service.GetTemplateResponse)
+async def get_survey_insight(survey_id: str):
+    ret = template_table.get_by_survey_id(survey_id)
+    if ret is None or not ret:
+        raise HTTPException(status_code=404, detail=f"{survey_id=} not found")
+    # todo does this have to be a model_dump instead of a plain dict?
+    return service.GetTemplateResponse(**ret[0])

@@ -50,7 +50,7 @@ class TemplateTable(DynamodbTableBase[database_model.Template]):
 
     def get_by_survey_id(self, survey_id) -> database_model.Template | None:
         response = self.table.query(
-            IndexName='survey_id_index',
+            IndexName='survey_id-index',
             KeyConditionExpression=Key('survey_id').eq(survey_id)
         )
         return response.get('Items', [])

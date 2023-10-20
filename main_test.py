@@ -267,7 +267,6 @@ def test_update_template():
 
 
 def test_get_template():
-
     # from previous test
     response = client.get(
         "/template/7e6af56c90524f149362d2379caf2d04",
@@ -277,6 +276,16 @@ def test_get_template():
 
     # not found
     assert client.get("/template/1").status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_get_template_by_servey_id():
+    client.post("template/", json={"survey_id": "1"})
+
+    response = client.get(
+        "/survey/1/template",
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json().get('system_message') == prompt_templates.SYSTEM_MESSAGE
 
 # TODO: add test for load message from db
 # todo there has to be internal error logging for each request
