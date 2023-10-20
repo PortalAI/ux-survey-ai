@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from model import service, database_model, chat
-from database import table_business, table_survey, table_survey_record
+from database import table_business, table_survey, table_survey_record, table_template
 from datetime import datetime
 from agent import conversation_manager, prompt_templates
 from uuid import uuid4
@@ -8,6 +8,7 @@ from uuid import uuid4
 business_table = table_business.BusinessTable()
 business_survey_table = table_survey.BusinessSurveyTable()
 survey_record_table = table_survey_record.SurveyRecordTable()
+template_table = table_template.TemplateTable()
 convo_manager = conversation_manager.ConversationManager(cache_size=100, ttl=100)
 
 router = APIRouter()
@@ -73,7 +74,14 @@ async def create_survey(request: service.CreateSurveyRequest):
         initial_message=initial_message,
     )
     business_survey_table.create_item(survey_entry)
-    return service.CreateSurveyResponse(**survey_entry.model_dump())
+    response = service.CreateSurveyResponse(**survey_entry.model_dump())
+
+    # add template by id
+    template_table.create_item(database_model.Template(
+        survey_id=response.survey_id,
+    ))
+
+    return response
 
 
 # @router.put("/survey/", response_model=service.UpdateSurveyResponse)

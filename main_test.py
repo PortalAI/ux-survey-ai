@@ -288,5 +288,25 @@ def test_get_template_by_survey_id():
     # not found
     assert client.get("/survey/2/template").status_code == status.HTTP_404_NOT_FOUND
 
+
+def test_create_survey_creates_template():
+    response = client.post(
+        "/survey/",
+        json={
+            "business_id": "1",
+            "survey_name": "test_survey",
+            "survey_description": "test survey desc",
+            "initial_message": "random random",
+        }
+    )
+    assert response.status_code == status.HTTP_200_OK
+    survey_data = response.json()
+    assert survey_data.get("initial_message") == "random random"
+
+    survey_id = survey_data.get("survey_id")
+    template_response = client.get(f"/survey/{survey_id}/template")
+    assert template_response.status_code == status.HTTP_200_OK
+    assert template_response.json().get('survey_id') == survey_id
+
 # TODO: add test for load message from db
 # todo there has to be internal error logging for each request
