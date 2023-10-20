@@ -57,7 +57,7 @@ async def get_template(template_id: str):
 
 
 @router.get("/survey/{survey_id}/template", response_model=service.GetTemplateResponse)
-async def get_survey_template(survey_id: str):
+async def get_template_by_survey_id(survey_id: str):
     ret = template_table.get_by_survey_id(survey_id)
     if ret is None or not ret:
         raise HTTPException(status_code=404, detail=f"{survey_id=} not found")
