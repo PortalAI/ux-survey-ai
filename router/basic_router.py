@@ -149,6 +149,26 @@ async def get_survey(survey_id: str):
     return service.GetSurveyResponse(**ret.model_dump())
 
 
+@router.put("/survey/{survey_id}", response_model=service.UpdateSurveyResponse, operation_id="update_survey")
+async def update_survey(survey_id: str, request: service.UpdateSurveyRequest):
+    survey = business_survey_table.get_item(survey_id)
+    if survey is None:
+        raise HTTPException(status_code=404, detail=f"{survey_id=} not found")
+    new_survey = database_model.BusinessSurvey(
+        survey_id=survey_id,
+        survey_name=request.survey_name,
+        business_id=survey.business_id,
+        quota=survey.quota,
+        user_id=survey.user_id,
+        created_at=survey.created_at,
+        system_prompt=survey.system_prompt,
+        survey_description=request.survey_description,
+        initial_message=request.initial_message,
+    )
+    business_survey_table.update_survey(new_survey)
+    return service.GetSurveyResponse(**business_survey_table.get_item(survey_id).model_dump())
+
+
 @router.delete("/survey/{survey_id}", response_model=Response, operation_id="delete_survey")
 async def delete_survey(survey_id: str):
     survey = business_survey_table.get_item(survey_id)

@@ -66,7 +66,7 @@ class UpdateSurveyRequest(BaseModel):
     survey_id: str
     survey_name: str
     survey_description: str
-    initial_message: str | None = Field(default=None)
+    initial_message: str
 
 
 class UpdateSurveyResponse(BaseModel):

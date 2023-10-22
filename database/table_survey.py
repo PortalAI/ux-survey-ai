@@ -26,6 +26,22 @@ class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.B
         }
         super().delete_item(key)
 
+    def update_survey(self, survey: database_model.BusinessSurvey):
+        return self.update_item(
+            key={"survey_id": survey.survey_id},
+            update_expression=(
+                "SET survey_description = :survey_description, "
+                "survey_name = :survey_name, "
+                "initial_message = :initial_message, "
+                "updated_at = :updated_at"),
+            expression_attribute_values={
+                ":survey_name": survey.survey_name,
+                ":survey_description": survey.survey_description,
+                ":initial_message": survey.initial_message,
+                ":updated_at": datetime.utcnow().isoformat(),
+            }
+        )
+
     def get_surveys_by_business_id(self, business_id: str) -> Sequence[database_model.BusinessSurvey]:
         response = self.table.query(
             IndexName='gsi1',
