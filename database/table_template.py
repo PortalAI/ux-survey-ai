@@ -53,4 +53,9 @@ class TemplateTable(DynamodbTableBase[database_model.Template]):
             IndexName='survey_id-index',
             KeyConditionExpression=Key('survey_id').eq(survey_id)
         )
-        return response.get('Items', [])
+        templates = response.get('Items', [])
+        # rework to query_one ?
+        if len(templates) > 0:
+            return database_model.Template(**templates[0])
+        else:
+            return None

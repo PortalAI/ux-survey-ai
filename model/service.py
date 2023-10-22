@@ -36,6 +36,10 @@ class GetBusinessResponse(BaseModel):
     business_description: str
 
 
+class GetBusinessListResponse(BaseModel):
+    businesses: list[GetBusinessResponse]
+
+
 class ListBusinessResponse(BaseModel):
     businesses: list[GetBusinessResponse]
 
@@ -105,8 +109,21 @@ class GetOrCreateSurveyRecordRequest(BaseModel):
     record_id: str | None = Field(default=None)
 
 
+class GetSurveyRecordResponse(BaseModel):
+    survey_id: str
+    record_id: str
+    chat_history: chat.ChatHistory
+    record_state: database_model.SurveyRecordState
+
+
 class GetOrCreateSurveyRecordResponse(BaseModel):
     survey_id: str
+    record_id: str
+    chat_history: chat.ChatHistory
+    record_state: database_model.SurveyRecordState
+
+
+class UpdateChatHistoryRequest(BaseModel):
     record_id: str
     chat_history: chat.ChatHistory
 
@@ -141,6 +158,7 @@ class SendNewMessageRequest(BaseModel):
 
 class SendNewMessageResponse(BaseModel):
     messages: chat.ChatHistory
+    record_state: database_model.SurveyRecordState
 
 
 class GetSurveyRecordSummaryResponse(BaseModel):

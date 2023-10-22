@@ -1,3 +1,5 @@
+from enum import Enum
+
 from pydantic import BaseModel, Field
 from uuid import uuid4
 from datetime import datetime
@@ -31,9 +33,17 @@ class BusinessSurvey(BaseModel):
     system_prompt: str
     initial_message: str
     assistant_name: str = Field(default="Assistant", description="The name BO want to show on top of the chat.")
+    insight: str = Field(default="No completed chats to generate insight", description="The insight of summaries of all its survey records.")
     quota: int
     created_at: str
     updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+
+
+class SurveyRecordState(str, Enum):
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    ERROR = "ERROR"
+    UNKNOWN = "UNKNOWN"
 
 
 class SurveyRecord(BaseModel):
@@ -50,6 +60,7 @@ class SurveyRecord(BaseModel):
     created_at: str
     updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     survey_ended: bool = Field(default=False)
+    record_state: SurveyRecordState = Field(default=SurveyRecordState.UNKNOWN)
 
 
 class Template(BaseModel):

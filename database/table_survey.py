@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from model import database_model
 from database import dynamodb_table_base
 from boto3.dynamodb.conditions import Key, Attr
@@ -18,6 +20,12 @@ class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.B
             return None
         return database_model.BusinessSurvey(**entry_dict)
 
+    def delete_item(self, survey_id: str) -> None:
+        key = {
+            'survey_id': survey_id
+        }
+        super().delete_item(key)
+
     def get_surveys_by_business_id(self, business_id: str) -> Sequence[database_model.BusinessSurvey]:
         response = self.table.query(
             IndexName='gsi1',
@@ -25,6 +33,20 @@ class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.B
         )
         res_list = response.get('Items', [])
         return [database_model.BusinessSurvey(**bs_dict) for bs_dict in res_list]
+
+    def update_survey_insight(
+        self,
+        survey_id: str,
+        insight: str,
+    ):
+        return self.update_item(
+            key={"survey_id": survey_id},
+            update_expression="SET insight = :insight, updated_at = :updated_at",
+            expression_attribute_values={
+                ":insight": insight,
+                ":updated_at": datetime.utcnow().isoformat(),
+            }
+        )
 
     def get_survey_from_guild_id(self, guild_id: str) -> list[database_model.BusinessSurvey]:
         response = self.table.scan(FilterExpression=Attr('guild_id').eq(guild_id))

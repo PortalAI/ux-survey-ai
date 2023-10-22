@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException
 from model import service, database_model
 
 from database import table_template
@@ -70,9 +70,7 @@ async def get_template(template_id: str):
 
 @router.get("/survey/{survey_id}/template", response_model=service.GetTemplateResponse)
 async def get_template_by_survey_id(survey_id: str):
-    ret = template_table.get_by_survey_id(survey_id)
-    if ret is None or not ret:
+    template = template_table.get_by_survey_id(survey_id)
+    if template is None or not template:
         raise HTTPException(status_code=404, detail=f"{survey_id=} not found")
-    # TODO verify that there is only one template per survey
-    # TODO does this have to be a model_dump instead of a plain dict?
-    return service.GetTemplateResponse(**ret[0])
+    return service.GetTemplateResponse(**template.model_dump())

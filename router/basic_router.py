@@ -1,15 +1,18 @@
 from fastapi import APIRouter, HTTPException
+from fastapi.openapi.models import Response
+
 from model import service, database_model, chat
 from database import table_business, table_survey, table_survey_record, table_template
 from datetime import datetime
-from agent import conversation_manager, prompt_templates
+from agent import prompt_templates
 from uuid import uuid4
+
+from services.survey_record import SurveyRecordService, convo_manager
 
 business_table = table_business.BusinessTable()
 business_survey_table = table_survey.BusinessSurveyTable()
 survey_record_table = table_survey_record.SurveyRecordTable()
 template_table = table_template.TemplateTable()
-convo_manager = conversation_manager.ConversationManager(cache_size=100, ttl=100)
 
 router = APIRouter()
 
@@ -40,6 +43,13 @@ async def update_business(request: service.UpdateBusinessRequest):
     return service.UpdateBusinessResponse(**ret)
 
 
+@router.get("/business", response_model=service.GetBusinessListResponse)
+async def get_businesses():
+    businesses = business_table.get_businesses()
+    return service.GetBusinessListResponse(
+        businesses=[service.GetBusinessResponse(**business.model_dump()) for business in businesses])
+
+
 @router.get("/business/{business_id}", response_model=service.GetBusinessResponse)
 async def get_business(business_id: str):
     ret = business_table.get_item(business_id)
@@ -47,6 +57,16 @@ async def get_business(business_id: str):
         raise HTTPException(status_code=404, detail=f"{business_id=} not found")
 
     return service.GetBusinessResponse(**ret.model_dump())
+
+
+@router.delete("/business/{business_id}", response_model=Response, operation_id="delete_business")
+async def delete_business(business_id: str):
+    ret = business_table.get_item(business_id)
+    if ret is None:
+        raise HTTPException(status_code=404, detail=f"{business_id=} not found")
+    else:
+        business_table.delete_item(business_id)
+        return Response(status_code=204, description="")
 
 
 ####### Survey Related API #######
@@ -120,11 +140,6 @@ async def create_survey(request: service.CreateSurveyRequest):
     return response
 
 
-# @router.put("/survey/", response_model=service.UpdateSurveyResponse)
-# async def update_survey(request: service.UpdateSurveyRequest):
-#     pass
-
-# get_survey needed
 @router.get("/survey/{survey_id}", response_model=service.GetSurveyResponse)
 async def get_survey(survey_id: str):
     ret = business_survey_table.get_item(survey_id)
@@ -134,25 +149,33 @@ async def get_survey(survey_id: str):
     return service.GetSurveyResponse(**ret.model_dump())
 
 
-# todo add route to regenerate all survey insights
+@router.delete("/survey/{survey_id}", response_model=Response, operation_id="delete_survey")
+async def delete_survey(survey_id: str):
+    survey = business_survey_table.get_item(survey_id)
+    if survey is None:
+        raise HTTPException(status_code=404, detail=f"{survey_id=} not found")
+    else:
+        business_survey_table.delete_item(survey_id)
+        return Response(status_code=204, description="")
 
-# GET /survey/{survey_id}/insight
-# response insight. (wait until all the)
+
 @router.get("/survey/{survey_id}/insight", response_model=service.GetSurveyInsightResponse)
 async def get_survey_insight(survey_id: str):
+    survey = business_survey_table.get_item(survey_id)
+    return service.GetSurveyInsightResponse(survey_insight=survey.insight)
 
-    # todo (keep comment) consider loading from db instead generating every time we open the page
-    # todo implement
 
-    return service.GetSurveyInsightResponse(
-        survey_insight="dummy response, not implemented yet"
-    )
+@router.put("/survey/{survey_id}/insight/new", response_model=service.GetSurveyInsightResponse)
+async def init_survey_insight(survey_id: str):
+    survey = business_survey_table.get_item(survey_id)
+    insight = SurveyRecordService.init_insight(survey)
+    return service.GetSurveyInsightResponse(survey_insight=insight)
 
 
 # list_surveys needed 
 @router.get("/business/{business_id}/survey", response_model=service.ListSurveysByBusinessResponse)
 async def get_surveys_list_by_business_id(business_id: str):
-    # check if business exist first. raise error if business doens't exist
+    # check if business exist first. raise error if business doesn't exist
     business_entry = business_table.get_item(business_id)
     if business_entry is None:
         raise HTTPException(status_code=404, detail=f"{business_id=} not found")
@@ -206,6 +229,7 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
         return service.GetOrCreateSurveyRecordResponse(
             survey_id=record_entry.survey_id,
             record_id=record_entry.record_id,
+            record_state=record_entry.record_state,
             chat_history=chat.ChatHistory.from_str(record_entry.chat_history))
 
     # If FE didn't provide record id, create a brand-new record.
@@ -218,24 +242,57 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
         business_id=request.business_id,
         created_at=datetime.utcnow().isoformat(),
         chat_history=agent.extract_chat_history_str(),
+        record_state=database_model.SurveyRecordState.IN_PROGRESS,
     )
     survey_record_table.create_item(record_entry)
     chat_history_messages: chat.ChatHistory = agent.extract_chat_history_chat_history()
     return service.GetOrCreateSurveyRecordResponse(
         survey_id=record_entry.survey_id,
         record_id=record_entry.record_id,
+        record_state=record_entry.record_state,
         chat_history=chat_history_messages,
     )
 
 
+@router.get("/survey_record/{record_id}", response_model=service.GetSurveyRecordResponse)
+async def get_survey_record(record_id: str):
+    record_entry = survey_record_table.get_item(record_id)
+    if record_entry is None:
+        raise HTTPException(status_code=404, detail=f"{record_id=} not found")
+    return service.GetSurveyRecordResponse(
+        survey_id=record_entry.survey_id,
+        record_id=record_entry.record_id,
+        chat_history=chat.ChatHistory.from_str(record_entry.chat_history),
+        record_state=record_entry.record_state,
+    )
+
+
+@router.delete("/survey_record/{record_id}", response_model=Response, operation_id="delete_survey_record")
+async def delete_survey_record(record_id: str):
+    record_entry = survey_record_table.get_item(record_id)
+    if record_entry is None:
+        raise HTTPException(status_code=404, detail=f"{record_id=} not found")
+    else:
+        survey_record_table.delete_item(record_id)
+        return Response(status_code=204, description="")
+
+
 @router.get("/survey_record/{record_id}/summary", response_model=service.GetSurveyRecordSummaryResponse)
 async def get_survey_summary(record_id: str):
+    record = survey_record_table.get_item(record_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail=f"{record_id=} not found")
+    summary = record.summary if record.summary is not None else "No summary yet. The dialog must be completed."
+    return service.GetSurveyRecordSummaryResponse(record_id=record_id, chat_summary=summary)
 
-    # todo implement
-    # survey_record_table.get_item()
 
-    return service.GetSurveyRecordSummaryResponse(record_id=record_id,
-                                                  chat_summary="dummy chat summary, not implemented")
+@router.put("/survey_record/{record_id}/summary/new", response_model=service.GetSurveyRecordSummaryResponse)
+async def init_survey_summary(record_id: str):
+    record = survey_record_table.get_item(record_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail=f"{record_id=} not found")
+    summary = SurveyRecordService.init_summary(record)
+    return service.GetSurveyRecordSummaryResponse(record_id=record_id, chat_summary=summary)
 
 
 @router.get("/chat_history/{record_id}", response_model=service.GetChatHistoryResponse)
@@ -255,7 +312,15 @@ async def get_chat_history(record_id: str):
 # post /chat/  chat response
 @router.post("/chat/", response_model=service.SendNewMessageResponse)
 async def chat_with_bot(request: service.SendNewMessageRequest):
-    agent = convo_manager.get_agent_from_record(record_id=request.record_id, survey_id=request.survey_id)
-    agent.generate_response(request.message.content)
-    history = agent.extract_chat_history_chat_history()
-    return service.SendNewMessageResponse(messages=history)
+    record = survey_record_table.get_item(request.record_id)
+    if record.record_state == database_model.SurveyRecordState.COMPLETED:
+        raise HTTPException(status_code=400, detail="This survey has been completed.")
+
+    try:
+        history = SurveyRecordService.answer(record, request.message.content)
+        if SurveyRecordService.is_completion_goal_reached(history):
+            record = SurveyRecordService.complete(record)
+        return service.SendNewMessageResponse(messages=history, record_state=record.record_state)
+    except Exception as e:
+        SurveyRecordService.set_state(record, database_model.SurveyRecordState.ERROR)
+        raise e

@@ -1,11 +1,12 @@
 from langchain.prompts import PromptTemplate
 
+
 # TODO consider turning this logic into a class
 SYSTEM_MESSAGE = """
 You are CEO's assistant of {business_name}
 The business is about {business_description}
 You are reaching out to user of the {business_name} and trying to do user research about {survey_description}.
-You will follow the moms test and 5 why methodology. Dive deep into conversation with the user and udnerstand what 
+You will follow the moms test and 5 why methodology. Dive deep into conversation with the user and understand what 
 are they really looking need deep down.
 """
 # todo should have in the future but for now introducing a change fails the test
@@ -37,7 +38,9 @@ SUMMARY_SINGLE_PROMPT_PARAMS = ['conversation']
 
 # GET_INSIGHT_PROMPT
 GET_INSIGHT_PROMPT = """
+The goal of the conversation was:
+{goal}
 What are the key insights from the following summaries:
 {summaries}
 """
-GET_INSIGHT_PROMPT_PARAMS = ['summaries']
+GET_INSIGHT_PROMPT_PARAMS = ['goal', 'summaries']
