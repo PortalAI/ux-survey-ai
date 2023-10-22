@@ -81,6 +81,42 @@ async def create_survey(request: service.CreateSurveyRequest):
         survey_id=response.survey_id,
     ))
 
+    #     business_info = business_table.get_item(request.business_id)
+    #
+    #     # TODO: getting initial message relies on the survey_id,
+    #     #  make sure initial message does not collide with the default template creation
+    #     if request.initial_message is not None:
+    #         initial_message = request.initial_message
+    #     else:
+    #         initial_message = PromptTemplate.from_template(prompt_templates.AGENT_INITIAL_MESSAGE).format(
+    #             agent_name="Coco",
+    #             business_name=business_info.business_name,
+    #         )
+    #
+    #     system_prompt = PromptTemplate.from_template(prompt_templates.SYSTEM_MESSAGE).format(
+    #         business_name=business_info.business_name,
+    #         business_description=business_info.business_description,
+    #         survey_description=request.survey_description,
+    #     )
+    #
+    #     survey_entry = database_model.BusinessSurvey(
+    #         user_id=["fake"],
+    #         business_id=request.business_id,
+    #         survey_name=request.survey_name,
+    #         survey_description=request.survey_description,
+    #         system_prompt='todo placeholder',
+    #         quota=request.quota,
+    #         created_at=datetime.utcnow().isoformat(),
+    #         initial_message='todo placeholder',
+    #     )
+    #     business_survey_table.create_item(survey_entry)
+    #     response = service.CreateSurveyResponse(**survey_entry.model_dump())
+    #
+    #     # add template by id,
+    #     template_table.create_item(database_model.Template(
+    #         survey_id=response.survey_id,
+    #     ))
+
     return response
 
 
@@ -98,10 +134,16 @@ async def get_survey(survey_id: str):
     return service.GetSurveyResponse(**ret.model_dump())
 
 
+# todo add route to regenerate all survey insights
+
 # GET /survey/{survey_id}/insight
 # response insight. (wait until all the)
 @router.get("/survey/{survey_id}/insight", response_model=service.GetSurveyInsightResponse)
 async def get_survey_insight(survey_id: str):
+
+    # todo (keep comment) consider loading from db instead generating every time we open the page
+    # todo implement
+
     return service.GetSurveyInsightResponse(
         survey_insight="dummy response, not implemented yet"
     )
@@ -135,7 +177,6 @@ async def list_survey_records(survey_id: str):
 
 
 ####### Record related API #######
-
 @router.post("/survey_record/", response_model=service.GetOrCreateSurveyRecordResponse)
 async def get_create_survey_record(request: service.GetOrCreateSurveyRecordRequest):
     # Checking errors
@@ -189,6 +230,10 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
 
 @router.get("/survey_record/{record_id}/summary", response_model=service.GetSurveyRecordSummaryResponse)
 async def get_survey_summary(record_id: str):
+
+    # todo implement
+    # survey_record_table.get_item()
+
     return service.GetSurveyRecordSummaryResponse(record_id=record_id,
                                                   chat_summary="dummy chat summary, not implemented")
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from model import service, database_model
 
 from database import table_template
@@ -10,7 +10,10 @@ router = APIRouter()
 
 @router.post("/template/", response_model=service.CreateTemplateResponse)
 async def create_template(request: service.CreateTemplateRequest):
-    # todo see why setting default to None doesn't work
+
+    # TODO see why setting default to None doesn't work
+    # TODO add check logic (whether survey id is in the index)
+
     template_entry = database_model.Template(
         survey_id=request.survey_id,
         # system_message=request.system_message,
@@ -29,7 +32,16 @@ async def create_template(request: service.CreateTemplateRequest):
 @router.put("/template/", response_model=service.UpdateTemplateResponse)
 async def update_template(request: service.UpdateTemplateRequest):
 
-    # todo verify that params are present in the templates or return error
+    # verifies that all params are present in the template
+    # for message, params in {
+    #     request.system_message: request.system_message_params,
+    #     request.agent_initial_message: request.agent_initial_message_params,
+    #     request.summary_single_prompt: request.summary_single_prompt_params,
+    #     request.get_insight_prompt: request.get_insight_prompt_params,
+    # }.items():
+    #     for param in ['{' + item + '}' for item in params]:
+    #         if param not in message:
+    #             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{param=} not in {message=}")
 
     template_entry = database_model.Template(
         template_id=request.template_id,
@@ -61,5 +73,6 @@ async def get_template_by_survey_id(survey_id: str):
     ret = template_table.get_by_survey_id(survey_id)
     if ret is None or not ret:
         raise HTTPException(status_code=404, detail=f"{survey_id=} not found")
-    # todo does this have to be a model_dump instead of a plain dict?
+    # TODO verify that there is only one template per survey
+    # TODO does this have to be a model_dump instead of a plain dict?
     return service.GetTemplateResponse(**ret[0])
