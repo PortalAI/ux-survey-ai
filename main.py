@@ -30,7 +30,7 @@ app.add_middleware(
 
 @app.get("/")
 async def root(auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
-    return {"message": "Hello World", "version": "0.3.0", "version_detail": "add auth", "user": auth.username}
+    return {"message": "Hello World", "version": "0.3.1", "version_detail": "add auth", "user": auth.username}
 
 
 @app.get("/health_check")
