@@ -13,6 +13,7 @@ class Auth:
     @staticmethod
     def has_permission(entity: UserRelatedEntity, auth: CognitoToken) -> bool:
         # todo: return True for admin
+        # todo: return False is user deactivated/deleted
         return auth.username in entity.user_id
 
     @staticmethod
