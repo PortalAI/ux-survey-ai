@@ -8,9 +8,9 @@ from datetime import datetime
 from agent import prompt_templates
 from uuid import uuid4
 
+from services.auth import Auth
 from services.survey_record import SurveyRecordService, convo_manager
 from security import cognito_config
-
 
 business_table = table_business.BusinessTable()
 business_survey_table = table_survey.BusinessSurveyTable()
@@ -22,7 +22,8 @@ router = APIRouter()
 
 ####### Business related API #######
 @router.post("/business/", response_model=service.CreateBusinessResponse)
-async def create_business(request: service.CreateBusinessRequest, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+async def create_business(request: service.CreateBusinessRequest,
+                          auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
     business_entry = database_model.Business(
         business_name=request.business_name,
         business_description=request.business_description,
@@ -34,7 +35,10 @@ async def create_business(request: service.CreateBusinessRequest, auth: CognitoT
 
 
 @router.put("/business/", response_model=service.UpdateBusinessResponse)
-async def update_business(request: service.UpdateBusinessRequest,  auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+async def update_business(request: service.UpdateBusinessRequest,
+                          auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+    business = business_table.get_item(request.business_id)
+    Auth.validate_permission(business, auth)
     business_entry = database_model.Business(
         business_id=request.business_id,
         business_name=request.business_name,
@@ -47,51 +51,47 @@ async def update_business(request: service.UpdateBusinessRequest,  auth: Cognito
 
 
 @router.get("/business", response_model=service.GetBusinessListResponse)
-async def get_businesses():
-    businesses = business_table.get_businesses()
+async def get_businesses(auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+    businesses = business_table.get_businesses(auth.username)
     return service.GetBusinessListResponse(
         businesses=[service.GetBusinessResponse(**business.model_dump()) for business in businesses])
 
 
 @router.get("/business/{business_id}", response_model=service.GetBusinessResponse)
-async def get_business(business_id: str,  auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
-    ret = business_table.get_item(business_id)
-    if auth.username not in ret.user_id:
-        raise HTTPException(status_code=401, detail=f"{auth.username=} not allower to visit {business_id=}")
-    if ret is None:
-        raise HTTPException(status_code=404, detail=f"{business_id=} not found")
-
-    return service.GetBusinessResponse(**ret.model_dump())
+async def get_business(business_id: str, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+    business = business_table.get_item(business_id)
+    Auth.validate_permission(business, auth)
+    return service.GetBusinessResponse(**business.model_dump())
 
 
 @router.delete("/business/{business_id}", response_model=Response, operation_id="delete_business")
-async def delete_business(business_id: str):
-    ret = business_table.get_item(business_id)
-    if ret is None:
-        raise HTTPException(status_code=404, detail=f"{business_id=} not found")
-    else:
-        business_table.delete_item(business_id)
-        return Response(status_code=204, description="")
+async def delete_business(business_id: str, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+    business = business_table.get_item(business_id)
+    Auth.validate_permission(business, auth)
+    business_table.delete_item(business_id)
+    return Response(status_code=204, description="")
 
 
 ####### Survey Related API #######
 @router.post("/survey/", response_model=service.CreateSurveyResponse)
-async def create_survey(request: service.CreateSurveyRequest):
-    business_info = business_table.get_item(request.business_id)
+async def create_survey(request: service.CreateSurveyRequest,
+                        auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+    business = business_table.get_item(request.business_id)
+    Auth.validate_permission(business, auth)
     initial_message = (request.initial_message
                        if request.initial_message is not None
                        else prompt_templates.agent_initial_message_template.format(
         agent_name="Coco",
-        business_name=business_info.business_name,
+        business_name=business.business_name,
     ))
     survey_entry = database_model.BusinessSurvey(
-        user_id=["fake"],
+        user_id=[auth.username],
         business_id=request.business_id,
         survey_name=request.survey_name,
         survey_description=request.survey_description,
         system_prompt=prompt_templates.system_message_template.format(
-            business_name=business_info.business_name,
-            business_description=business_info.business_description,
+            business_name=business.business_name,
+            business_description=business.business_description,
             survey_description=request.survey_description,
         ),
         quota=request.quota,
@@ -146,19 +146,18 @@ async def create_survey(request: service.CreateSurveyRequest):
 
 
 @router.get("/survey/{survey_id}", response_model=service.GetSurveyResponse)
-async def get_survey(survey_id: str):
-    ret = business_survey_table.get_item(survey_id)
-    if ret is None:
-        raise HTTPException(status_code=404, detail=f"{survey_id=} not found")
-
-    return service.GetSurveyResponse(**ret.model_dump())
+async def get_survey(survey_id: str, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+    survey = business_survey_table.get_item(survey_id)
+    Auth.validate_permission(survey, auth)
+    return service.GetSurveyResponse(**survey.model_dump())
 
 
 @router.put("/survey/{survey_id}", response_model=service.UpdateSurveyResponse, operation_id="update_survey")
-async def update_survey(survey_id: str, request: service.UpdateSurveyRequest):
+async def update_survey(survey_id: str,
+                        request: service.UpdateSurveyRequest,
+                        auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
     survey = business_survey_table.get_item(survey_id)
-    if survey is None:
-        raise HTTPException(status_code=404, detail=f"{survey_id=} not found")
+    Auth.validate_permission(survey, auth)
     new_survey = database_model.BusinessSurvey(
         survey_id=survey_id,
         survey_name=request.survey_name,
@@ -175,41 +174,35 @@ async def update_survey(survey_id: str, request: service.UpdateSurveyRequest):
 
 
 @router.delete("/survey/{survey_id}", response_model=Response, operation_id="delete_survey")
-async def delete_survey(survey_id: str):
+async def delete_survey(survey_id: str, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
     survey = business_survey_table.get_item(survey_id)
-    if survey is None:
-        raise HTTPException(status_code=404, detail=f"{survey_id=} not found")
-    else:
-        business_survey_table.delete_item(survey_id)
-        return Response(status_code=204, description="")
+    Auth.validate_permission(survey, auth)
+    business_survey_table.delete_item(survey_id)
+    return Response(status_code=204, description="")
 
 
 @router.get("/survey/{survey_id}/insight", response_model=service.GetSurveyInsightResponse)
-async def get_survey_insight(survey_id: str):
+async def get_survey_insight(survey_id: str, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
     survey = business_survey_table.get_item(survey_id)
+    Auth.validate_permission(survey, auth)
     return service.GetSurveyInsightResponse(survey_insight=survey.insight)
 
 
 @router.put("/survey/{survey_id}/insight/new", response_model=service.GetSurveyInsightResponse)
-async def init_survey_insight(survey_id: str):
+async def init_survey_insight(survey_id: str, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
     survey = business_survey_table.get_item(survey_id)
+    Auth.validate_permission(survey, auth)
     insight = SurveyRecordService.init_insight(survey)
     return service.GetSurveyInsightResponse(survey_insight=insight)
 
 
 # list_surveys needed 
 @router.get("/business/{business_id}/survey", response_model=service.ListSurveysByBusinessResponse)
-async def get_surveys_list_by_business_id(business_id: str):
-    # check if business exist first. raise error if business doesn't exist
-    business_entry = business_table.get_item(business_id)
-    if business_entry is None:
-        raise HTTPException(status_code=404, detail=f"{business_id=} not found")
-
-    survey_entries = business_survey_table.get_surveys_by_business_id(business_id=business_id)
-    # Check if survey found for this business
-    if not survey_entries:
-        return service.ListSurveysByBusinessResponse(surveys=[])
-
+async def get_surveys_list_by_business_id(business_id: str,
+                                          auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+    business = business_table.get_item(business_id)
+    Auth.validate_permission(business, auth)
+    survey_entries = business_survey_table.get_surveys(business_id, auth.username)
     return service.ListSurveysByBusinessResponse(
         surveys=[service.GetSurveyResponse(**survey.model_dump()) for survey in survey_entries]
     )
@@ -218,8 +211,9 @@ async def get_surveys_list_by_business_id(business_id: str):
 # GET /survey/{survey_id}/records
 # get survey id record. pagination, sort. 
 @router.get("/survey/{survey_id}/records", response_model=service.ListSurveyRecordsResponse)
-async def list_survey_records(survey_id: str):
-    # TODO: verify survey exist
+async def list_survey_records(survey_id: str, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+    survey = business_survey_table.get_item(survey_id)
+    Auth.validate_permission(survey, auth)
     survey_records = survey_record_table.list_survey_records(survey_id=survey_id)
     return service.ListSurveyRecordsResponse(records=survey_records)
 
@@ -227,10 +221,7 @@ async def list_survey_records(survey_id: str):
 ####### Record related API #######
 @router.post("/survey_record/", response_model=service.GetOrCreateSurveyRecordResponse)
 async def get_create_survey_record(request: service.GetOrCreateSurveyRecordRequest):
-    # Checking errors
-    # TODO: verify business and survey together
-    if business_table.get_item(request.business_id) is None:
-        raise HTTPException(status_code=404, detail=f"{request.business_id=} not found")
+    survey = business_survey_table.get_item(request.survey_id)
     if business_survey_table.get_item(request.survey_id) is None:
         raise HTTPException(status_code=404, detail=f"{request.survey_id=} not found")
     # If FE provided a record_id
@@ -241,6 +232,8 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
             return service.GetOrCreateSurveyRecordResponse(
                 survey_id=request.survey_id,
                 record_id=request.record_id,
+                description=survey.survey_description,
+                record_state=database_model.SurveyRecordState.IN_PROGRESS,
                 chat_history=convo_manager.cache[request.record_id].extract_chat_history_chat_history()
             )
         # check DB 
@@ -255,6 +248,7 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
             survey_id=record_entry.survey_id,
             record_id=record_entry.record_id,
             record_state=record_entry.record_state,
+            description=survey.survey_description,
             chat_history=chat.ChatHistory.from_str(record_entry.chat_history))
 
     # If FE didn't provide record id, create a brand-new record.
@@ -264,7 +258,7 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
     record_entry = database_model.SurveyRecord(
         record_id=record_id,
         survey_id=request.survey_id,
-        business_id=request.business_id,
+        business_id=survey.business_id,
         created_at=datetime.utcnow().isoformat(),
         chat_history=agent.extract_chat_history_str(),
         record_state=database_model.SurveyRecordState.IN_PROGRESS,
@@ -275,6 +269,7 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
         survey_id=record_entry.survey_id,
         record_id=record_entry.record_id,
         record_state=record_entry.record_state,
+        description=survey.survey_description,
         chat_history=chat_history_messages,
     )
 

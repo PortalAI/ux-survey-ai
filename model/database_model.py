@@ -50,7 +50,7 @@ class SurveyRecord(BaseModel):
     record_id: str = Field(default_factory=lambda: uuid4().hex)
     survey_id: str
     business_id: str
-    auth_id: list[str] = Field(
+    user_id: list[str] = Field(
         default=[],
         description="The user id from business owner who's should be authorized to view this record")
     customer_id: str | None = Field(default=None)

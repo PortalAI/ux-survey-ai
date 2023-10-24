@@ -46,8 +46,8 @@ class BusinessTable(DynamodbTableBase[database_model.Business]):
         }
         super().delete_item(key)
 
-    def get_businesses(self) -> list[database_model.Business]:
-        response = self.query_all()
+    def get_businesses(self, user_id: str) -> list[database_model.Business]:
+        response = self.query_all(user_id)
         businesses = []
         for record in response:
             print(record)

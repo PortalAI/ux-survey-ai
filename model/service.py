@@ -105,7 +105,6 @@ class ListSurveysByBusinessResponse(BaseModel):
 ################ Record ################
 class GetOrCreateSurveyRecordRequest(BaseModel):
     survey_id: str
-    business_id: str
     record_id: str | None = Field(default=None)
 
 
@@ -121,6 +120,7 @@ class GetOrCreateSurveyRecordResponse(BaseModel):
     record_id: str
     chat_history: chat.ChatHistory
     record_state: database_model.SurveyRecordState
+    description: str
 
 
 class UpdateChatHistoryRequest(BaseModel):

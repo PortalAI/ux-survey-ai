@@ -42,10 +42,11 @@ class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.B
             }
         )
 
-    def get_surveys_by_business_id(self, business_id: str) -> Sequence[database_model.BusinessSurvey]:
+    def get_surveys(self, business_id: str, user_id: str) -> Sequence[database_model.BusinessSurvey]:
         response = self.table.query(
             IndexName='gsi1',
-            KeyConditionExpression=Key('business_id').eq(business_id)
+            KeyConditionExpression=Key('business_id').eq(business_id),
+            FilterExpression=Attr('user_id').contains(user_id)
         )
         res_list = response.get('Items', [])
         return [database_model.BusinessSurvey(**bs_dict) for bs_dict in res_list]
