@@ -1,11 +1,13 @@
 import logging
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from router import basic_router, template_router
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
+from fastapi_cognito import CognitoToken
 from config import settings
+from security import cognito_config
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -27,8 +29,8 @@ app.add_middleware(
 
 
 @app.get("/")
-async def root():
-    return {"message": "Hello World", "version": "0.2.1"}
+async def root(auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+    return {"message": "Hello World", "version": "0.3.0", "version_detail": "add auth", "user": auth.username}
 
 
 @app.get("/health_check")

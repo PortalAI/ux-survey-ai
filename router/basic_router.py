@@ -1,13 +1,16 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.openapi.models import Response
 
 from model import service, database_model, chat
 from database import table_business, table_survey, table_survey_record, table_template
+from fastapi_cognito import CognitoToken
 from datetime import datetime
 from agent import prompt_templates
 from uuid import uuid4
 
 from services.survey_record import SurveyRecordService, convo_manager
+from security import cognito_config
+
 
 business_table = table_business.BusinessTable()
 business_survey_table = table_survey.BusinessSurveyTable()
@@ -19,11 +22,11 @@ router = APIRouter()
 
 ####### Business related API #######
 @router.post("/business/", response_model=service.CreateBusinessResponse)
-async def create_business(request: service.CreateBusinessRequest):
+async def create_business(request: service.CreateBusinessRequest, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
     business_entry = database_model.Business(
         business_name=request.business_name,
         business_description=request.business_description,
-        user_id=["fake"],
+        user_id=[auth.username],
         created_at=datetime.utcnow().isoformat(),
     )
     business_table.create_item(business_entry)
@@ -31,12 +34,12 @@ async def create_business(request: service.CreateBusinessRequest):
 
 
 @router.put("/business/", response_model=service.UpdateBusinessResponse)
-async def update_business(request: service.UpdateBusinessRequest):
+async def update_business(request: service.UpdateBusinessRequest,  auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
     business_entry = database_model.Business(
         business_id=request.business_id,
         business_name=request.business_name,
         business_description=request.business_description,
-        user_id=["fake"],
+        user_id=[auth.username],
         created_at=datetime.utcnow().isoformat(),
     )
     ret = business_table.update_business(business_entry)
@@ -51,8 +54,10 @@ async def get_businesses():
 
 
 @router.get("/business/{business_id}", response_model=service.GetBusinessResponse)
-async def get_business(business_id: str):
+async def get_business(business_id: str,  auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
     ret = business_table.get_item(business_id)
+    if auth.username not in ret.user_id:
+        raise HTTPException(status_code=401, detail=f"{auth.username=} not allower to visit {business_id=}")
     if ret is None:
         raise HTTPException(status_code=404, detail=f"{business_id=} not found")
 
