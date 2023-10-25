@@ -36,6 +36,10 @@ class GetBusinessResponse(BaseModel):
     business_description: str
 
 
+class GetBusinessListResponse(BaseModel):
+    businesses: list[GetBusinessResponse]
+
+
 class ListBusinessResponse(BaseModel):
     businesses: list[GetBusinessResponse]
 
@@ -62,7 +66,7 @@ class UpdateSurveyRequest(BaseModel):
     survey_id: str
     survey_name: str
     survey_description: str
-    initial_message: str | None = Field(default=None)
+    initial_message: str
 
 
 class UpdateSurveyResponse(BaseModel):
@@ -101,12 +105,25 @@ class ListSurveysByBusinessResponse(BaseModel):
 ################ Record ################
 class GetOrCreateSurveyRecordRequest(BaseModel):
     survey_id: str
-    business_id: str
     record_id: str | None = Field(default=None)
+
+
+class GetSurveyRecordResponse(BaseModel):
+    survey_id: str
+    record_id: str
+    chat_history: chat.ChatHistory
+    record_state: database_model.SurveyRecordState
 
 
 class GetOrCreateSurveyRecordResponse(BaseModel):
     survey_id: str
+    record_id: str
+    chat_history: chat.ChatHistory
+    record_state: database_model.SurveyRecordState
+    description: str
+
+
+class UpdateChatHistoryRequest(BaseModel):
     record_id: str
     chat_history: chat.ChatHistory
 
@@ -141,8 +158,79 @@ class SendNewMessageRequest(BaseModel):
 
 class SendNewMessageResponse(BaseModel):
     messages: chat.ChatHistory
+    record_state: database_model.SurveyRecordState
 
 
 class GetSurveyRecordSummaryResponse(BaseModel):
     record_id: str
     chat_summary: str
+
+
+################ Template ################
+class CreateTemplateRequest(BaseModel):
+    survey_id: str
+    system_message: str | None = Field(default=None)
+    system_message_params: list[str] | None = Field(default=None)
+    agent_initial_message: str | None = Field(default=None)
+    agent_initial_message_params: list[str] = Field(default=None)
+    summary_single_prompt: str | None = Field(default=None)
+    summary_single_prompt_params: list[str] | None = Field(default=None)
+    get_insight_prompt: str | None = Field(default=None)
+    get_insight_prompt_params: list[str] | None = Field(default=None)
+
+
+class CreateTemplateResponse(BaseModel):
+    template_id: str
+    survey_id: str
+    system_message: str
+    system_message_params: list[str]
+    agent_initial_message: str
+    agent_initial_message_params: list[str]
+    summary_single_prompt: str
+    summary_single_prompt_params: list[str]
+    get_insight_prompt: str
+    get_insight_prompt_params: list[str]
+
+
+class UpdateTemplateRequest(BaseModel):
+    template_id: str
+    survey_id: str
+    system_message: str
+    system_message_params: list[str]
+    agent_initial_message: str
+    agent_initial_message_params: list[str]
+    summary_single_prompt: str
+    summary_single_prompt_params: list[str]
+    get_insight_prompt: str
+    get_insight_prompt_params: list[str]
+
+
+class UpdateTemplateResponse(BaseModel):
+    template_id: str
+    survey_id: str
+    system_message: str
+    system_message_params: list[str]
+    agent_initial_message: str
+    agent_initial_message_params: list[str]
+    summary_single_prompt: str
+    summary_single_prompt_params: list[str]
+    get_insight_prompt: str
+    get_insight_prompt_params: list[str]
+
+
+class GetTemplateRequest(BaseModel):
+    template_id: str
+
+
+class GetTemplateResponse(BaseModel):
+    template_id: str
+    template_id: str
+    survey_id: str
+    system_message: str
+    system_message_params: list[str]
+    agent_initial_message: str
+    agent_initial_message_params: list[str]
+    summary_single_prompt: str
+    summary_single_prompt_params: list[str]
+    get_insight_prompt: str
+    get_insight_prompt_params: list[str]

@@ -35,6 +35,10 @@ class DynamodbTableBase(Generic[Table]):
         response = self.table.delete_item(Key=key)
         return response
 
+    def query_all(self, user_id: str) -> list[Table]:
+        response = self.table.scan(FilterExpression=Attr('user_id').contains(user_id))
+        return response.get('Items', [])
+
     def query(self, key_condition_expression: Key, index_name: str | None = None) -> list[Table]:
         if index_name is not None:
             response = self.table.query(

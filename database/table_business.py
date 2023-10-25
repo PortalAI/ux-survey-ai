@@ -39,3 +39,17 @@ class BusinessTable(DynamodbTableBase[database_model.Business]):
                 ":updated_at": business.updated_at,
             }
         )
+
+    def delete_item(self, business_id: str):
+        key = {
+            self.hash_key: business_id
+        }
+        super().delete_item(key)
+
+    def get_businesses(self, user_id: str) -> list[database_model.Business]:
+        response = self.query_all(user_id)
+        businesses = []
+        for record in response:
+            print(record)
+            businesses.append(database_model.Business(**record))
+        return businesses
