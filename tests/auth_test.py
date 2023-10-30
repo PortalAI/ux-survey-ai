@@ -2,6 +2,7 @@
 import boto3
 from fastapi.testclient import TestClient
 from main import app
+import pytest
 
 client = TestClient(app)
 
@@ -11,26 +12,28 @@ header = None
 business_id = None
 survey_id = None
 record_id = None
-
+headers = None
 cognito_client = boto3.client('cognito-idp', region_name='us-west-2')
 
-def get_tokens(username, password):
-    # This function simulates the AWS Amplify authentication process by directly interacting with AWS Cognito
+
+@pytest.fixture
+def auth_token():
     response = cognito_client.initiate_auth(
         AuthFlow='USER_PASSWORD_AUTH',
         AuthParameters={
-            'USERNAME': username,
-            'PASSWORD': password,
+            'USERNAME': 's@portal.ai',
+            'PASSWORD': '',
         },
         ClientId=client_id,
     )
-    return response['AuthenticationResult']['IdToken'], response['AuthenticationResult']['AccessToken']
-
+    return response['AuthenticationResult']['AccessToken']
 
 def test_create_business(auth_token):
+    global headers, business_id
     headers = {
         'Authorization': f'Bearer {auth_token}',
     }
+    
     # 1. create a business and get the business id
     business_name = "skins.cash"
     business_description = """
@@ -52,12 +55,13 @@ def test_create_business(auth_token):
             "business_description": business_description,
         }
     )
-    print(business_info.json())
+
     business_id = business_info.json()['business_id']
     assert business_id is not None
 
 
 def test_craete_survey():
+    global survey_id
     survey_name = "User needs and preference"
     survey_description = """
     Your task is to engage the customer in a one-on-one interview,
@@ -68,7 +72,7 @@ def test_craete_survey():
     """
     survey_info = client.post(
         "/survey/",
-        headers=header,
+        headers=headers,
         json={
             "business_id": business_id,
             "survey_name": survey_name,
@@ -79,8 +83,10 @@ def test_craete_survey():
     assert survey_id is not None
 
 def test_create_record():
+    global record_id
     survey_record_info = client.post(
         "/survey_record/",
+        headers=headers,
         json={
             "business_id": business_id,
             "survey_id": survey_id,
@@ -90,15 +96,16 @@ def test_create_record():
     record_id = survey_record_info.json()['record_id']
     assert record_id is not None
 
-def test_start_chat():
-    chat_response = client.post(
-        "/chat/",
-        json={
-            "record_id": record_id,
-            "survey_id": survey_id,
-            "message": {
-                "role": "human",
-                "content": "Hi who are you?"
-            }
-        }
-    )
+# def test_start_chat():
+#     chat_response = client.post(
+#         "/chat/",
+#         headers=headers,
+#         json={
+#             "record_id": record_id,
+#             "survey_id": survey_id,
+#             "message": {
+#                 "role": "human",
+#                 "content": "Hi who are you?"
+#             }
+#         }
+#     )

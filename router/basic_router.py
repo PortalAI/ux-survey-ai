@@ -272,7 +272,6 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
     )
     survey_record_table.create_item(record_entry)
     chat_history_messages: chat.ChatHistory = agent.extract_chat_history_chat_history()
-    logger.info("existing chathisotry: %s", agent._chain.memory.chat_memory.messages)
     return service.GetOrCreateSurveyRecordResponse(
         survey_id=record_entry.survey_id,
         record_id=record_entry.record_id,

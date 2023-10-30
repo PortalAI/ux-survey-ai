@@ -16,8 +16,7 @@ idna==3.4
 iniconfig==2.0.0
 itsdangerous==2.1.2
 jmespath==1.0.1
-langchain==0.0.291
-langsmith==0.0.37
+langchain==0.0.325
 marshmallow==3.20.1
 multidict==6.0.4
 mypy-extensions==1.0.0

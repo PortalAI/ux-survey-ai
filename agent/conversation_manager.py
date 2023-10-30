@@ -48,5 +48,4 @@ class ConversationManager:
         # Directly pass the system message as the second message to the AI and get response and use that as the initial message
         self.cache[record_id].generate_response(system_message)
         self.cache[record_id].delete_second_message()
-        logger.info("history is %s", self.cache[record_id]._chain.memory.chat_memory.messages)
         return self.cache[record_id]
