@@ -4,7 +4,9 @@ from database import table_survey_record, table_survey
 from model.chat import ChatHistory
 from model.database_model import SurveyRecord, SurveyRecordState, BusinessSurvey
 from router.template_router import template_table
+import logging
 
+logger = logging.getLogger(__name__)
 survey_record_table = table_survey_record.SurveyRecordTable()
 business_survey_table = table_survey.BusinessSurveyTable()
 
@@ -17,9 +19,9 @@ class SurveyRecordService:
     def answer(record: SurveyRecord, question: str) -> ChatHistory:
         SurveyRecordService.set_state(record, SurveyRecordState.IN_PROGRESS)
         agent = convo_manager.get_agent_from_record(record_id=record.record_id, survey_id=record.survey_id)
-        print("Generating response")
+        logger.info("Generating response")
         agent.generate_response(question)
-        print("Saving the response to the history")
+        logger.info("Saving the response to the history")
         survey_record_table.update_chat_history(record.record_id, agent.extract_chat_history_str())
         return agent.extract_chat_history_chat_history()
 
@@ -33,7 +35,6 @@ class SurveyRecordService:
 
     @staticmethod
     def init_summary(record: SurveyRecord) -> str:
-        print("Generating the summary")
         agent = convo_manager.get_agent_from_record(record_id=record.record_id, survey_id=record.survey_id)
         templates = template_table.get_by_survey_id(record.survey_id)
         prompt = templates.summary_single_prompt.replace('{conversation}', agent.extract_chat_history_str())

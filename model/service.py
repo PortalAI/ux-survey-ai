@@ -121,6 +121,8 @@ class GetOrCreateSurveyRecordResponse(BaseModel):
     chat_history: chat.ChatHistory
     record_state: database_model.SurveyRecordState
     description: str
+    survey_name: str
+    assistant_name: str = Field(default='Assistant')
 
 
 class UpdateChatHistoryRequest(BaseModel):

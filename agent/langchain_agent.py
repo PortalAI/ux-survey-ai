@@ -6,7 +6,9 @@ from model import chat
 from langchain.memory.chat_message_histories.in_memory import ChatMessageHistory
 from langchain.schema.messages import SystemMessage, BaseMessage, messages_from_dict, messages_to_dict
 from config import settings
+import logging
 
+logger = logging.getLogger(__name__)
 
 class LangChainAgent:
     def __init__(self,
@@ -43,3 +45,6 @@ class LangChainAgent:
     def extract_chat_history_chat_history(self) -> chat.ChatHistory:
         extracted_messages = self._chain.memory.chat_memory.messages
         return chat.ChatHistory(messages=[self._dict_to_message(m) for m in extracted_messages])
+
+    def delete_second_message(self) -> None:
+        self._chain.memory.chat_memory.messages.pop(1)

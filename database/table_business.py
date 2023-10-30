@@ -3,7 +3,9 @@ from model import database_model
 from boto3.dynamodb.conditions import Key
 from collections.abc import Sequence
 from config import settings
+import logging
 
+logger = logging.getLogger(__name__)
 
 class BusinessTable(DynamodbTableBase[database_model.Business]):
     def __init__(self):
@@ -50,6 +52,5 @@ class BusinessTable(DynamodbTableBase[database_model.Business]):
         response = self.query_all(user_id)
         businesses = []
         for record in response:
-            print(record)
             businesses.append(database_model.Business(**record))
         return businesses

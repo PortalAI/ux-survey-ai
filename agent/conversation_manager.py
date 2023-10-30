@@ -1,10 +1,12 @@
 import cachetools
 from database import table_survey_record, table_survey
 from agent import langchain_agent
+import logging
 
 survey_record_table = table_survey_record.SurveyRecordTable()
 survey_table = table_survey.BusinessSurveyTable()
 
+logger = logging.getLogger(__name__)
 
 class PersistentTTLCache(cachetools.TTLCache):
     def __init__(self, maxsize: int, ttl: int):
@@ -39,10 +41,12 @@ class ConversationManager:
                 self.cache[record_id] = langchain_agent.LangChainAgent(conversation_history=chat_history)
                 return self.cache[record_id]
 
+        logger.info("record not found, creating a new one")
         # if not, get system prompt from survey table and create agent from there
         system_message, initial_message = survey_table.get_prompt_from_survey_id(survey_id=survey_id)
-        self.cache[record_id] = langchain_agent.LangChainAgent(
-            system_message=system_message,
-            initial_message=initial_message,
-        )
+        self.cache[record_id] = langchain_agent.LangChainAgent(system_message=system_message)
+        # Directly pass the system message as the second message to the AI and get response and use that as the initial message
+        self.cache[record_id].generate_response(system_message)
+        self.cache[record_id].delete_second_message()
+        logger.info("history is %s", self.cache[record_id]._chain.memory.chat_memory.messages)
         return self.cache[record_id]

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.openapi.models import Response
+import logging
 
 from model import service, database_model, chat
 from database import table_business, table_survey, table_survey_record, table_template
@@ -17,8 +18,8 @@ business_survey_table = table_survey.BusinessSurveyTable()
 survey_record_table = table_survey_record.SurveyRecordTable()
 template_table = table_template.TemplateTable()
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
-
 
 ####### Business related API #######
 @router.post("/business/", response_model=service.CreateBusinessResponse)
@@ -227,14 +228,17 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
     # If FE provided a record_id
     if request.record_id is not None:
         # check cache first
-
+        
         if request.record_id in convo_manager.cache:
+            logger.info("record_id found in cache, retrive from cache")
             return service.GetOrCreateSurveyRecordResponse(
                 survey_id=request.survey_id,
                 record_id=request.record_id,
+                survey_name=survey.survey_name,
                 description=survey.survey_description,
                 record_state=database_model.SurveyRecordState.IN_PROGRESS,
-                chat_history=convo_manager.cache[request.record_id].extract_chat_history_chat_history()
+                chat_history=convo_manager.cache[request.record_id].extract_chat_history_chat_history(),
+                assistant_name=survey.assistant_name,
             )
         # check DB 
         # TODO: improve this caching logic
@@ -243,13 +247,16 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
         if record_entry is None:
             raise HTTPException(status_code=404, detail=f"{request.record_id=} not found")
         # If record exist, respond directly
-
+        # TODO: load it into cache first
+        logger.info("record_id found in db, retrive from db")
         return service.GetOrCreateSurveyRecordResponse(
             survey_id=record_entry.survey_id,
             record_id=record_entry.record_id,
+            survey_name=survey.survey_name,
             record_state=record_entry.record_state,
             description=survey.survey_description,
-            chat_history=chat.ChatHistory.from_str(record_entry.chat_history))
+            chat_history=chat.ChatHistory.from_str(record_entry.chat_history),
+            assistant_name=survey.assistant_name,)
 
     # If FE didn't provide record id, create a brand-new record.
     # This means the beginning of the conversation.
@@ -265,18 +272,22 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
     )
     survey_record_table.create_item(record_entry)
     chat_history_messages: chat.ChatHistory = agent.extract_chat_history_chat_history()
+    logger.info("existing chathisotry: %s", agent._chain.memory.chat_memory.messages)
     return service.GetOrCreateSurveyRecordResponse(
         survey_id=record_entry.survey_id,
         record_id=record_entry.record_id,
+        survey_name=survey.survey_name,
         record_state=record_entry.record_state,
         description=survey.survey_description,
         chat_history=chat_history_messages,
+        assistant_name=survey.assistant_name,
     )
 
 
 @router.get("/survey_record/{record_id}", response_model=service.GetSurveyRecordResponse)
 async def get_survey_record(record_id: str):
     record_entry = survey_record_table.get_item(record_id)
+    logger.info(f'looking for {record_id=}')
     if record_entry is None:
         raise HTTPException(status_code=404, detail=f"{record_id=} not found")
     return service.GetSurveyRecordResponse(
