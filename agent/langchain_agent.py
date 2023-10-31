@@ -25,7 +25,7 @@ class LangChainAgent:
             retrieved_chat_history = ChatMessageHistory(messages=retrieved_messages)
             memory = ConversationBufferMemory(chat_memory=retrieved_chat_history)
 
-        model = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-16k", openai_api_key=settings.OPENAI_API_KEY)
+        model = ChatOpenAI(temperature=0, model_name="gpt-4", openai_api_key=settings.OPENAI_API_KEY)
         self._chain = ConversationChain(
             llm=model,
             memory=memory,

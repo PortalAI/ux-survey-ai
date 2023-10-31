@@ -64,4 +64,4 @@ class SurveyRecordService:
 
     @staticmethod
     def is_completion_goal_reached(chat: ChatHistory) -> bool:
-        return len(chat.messages) > 10
+        return len(chat.messages) > 15
