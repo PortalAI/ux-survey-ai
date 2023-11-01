@@ -35,7 +35,7 @@ async def add_request_id(request: Request, call_next):
 @app.get("/")
 async def root():
     logger.info("hello")
-    return {"message": "Hello World", "version": "0.3.3", "version_detail": "increase chats to 60"}
+    return {"message": "Hello World", "version": "0.3.4", "version_detail": "reduce retry for gpt4"}
 
 
 @app.get("/health_check")
