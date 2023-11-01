@@ -146,6 +146,15 @@ async def create_survey(request: service.CreateSurveyRequest,
     return response
 
 
+@router.get("/survey", response_model=service.ListSurveysResponse, operation_id="get_surveys")
+async def get_surveys(auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+    survey_entries = business_survey_table.get_surveys(auth.username)
+    surveys = []
+    for survey in survey_entries:
+        surveys.append(service.GetSurveyResponse(**survey.model_dump()))
+    return service.ListSurveysResponse(surveys=surveys)
+
+
 @router.get("/survey/{survey_id}", response_model=service.GetSurveyResponse)
 async def get_survey(survey_id: str, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
     survey = business_survey_table.get_item(survey_id)
@@ -203,7 +212,7 @@ async def get_surveys_list_by_business_id(business_id: str,
                                           auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
     business = business_table.get_item(business_id)
     Auth.validate_permission(business, auth)
-    survey_entries = business_survey_table.get_surveys(business_id, auth.username)
+    survey_entries = business_survey_table.get_surveys(auth.username, business_id)
     return service.ListSurveysByBusinessResponse(
         surveys=[service.GetSurveyResponse(**survey.model_dump()) for survey in survey_entries]
     )

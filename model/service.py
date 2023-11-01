@@ -102,6 +102,10 @@ class ListSurveysByBusinessResponse(BaseModel):
     surveys: list[GetSurveyResponse]
 
 
+class ListSurveysResponse(BaseModel):
+    surveys: list[GetSurveyResponse]
+
+
 ################ Record ################
 class GetOrCreateSurveyRecordRequest(BaseModel):
     survey_id: str
