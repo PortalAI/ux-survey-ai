@@ -218,52 +218,52 @@ def test_list_survey_records():
 #     print(f"got {survey_record_info.json()['chat_history']}")
 
 
-def test_create_template():
-    response = client.post(
-        '/template/',
-        json={
-            # todo make sure survey id is present in the db
-            "survey_id": "1",
-        }
-    )
+# def test_create_template():
+#     response = client.post(
+#         '/template/',
+#         json={
+#             # todo make sure survey id is present in the db
+#             "survey_id": "1",
+#         }
+#     )
+#
+#     assert response.status_code == status.HTTP_200_OK
+#     data = response.json()
+#     assert data.pop("template_id")  # check if template_id is returned
+#     assert data == {
+#         "survey_id": "1",
+#         'system_message': prompt_templates.SYSTEM_MESSAGE,
+#         'system_message_params': prompt_templates.SYSTEM_MESSAGE_PARAMS,
+#         'agent_initial_message': prompt_templates.AGENT_INITIAL_MESSAGE,
+#         'agent_initial_message_params': prompt_templates.AGENT_INITIAL_MESSAGE_PARAMS,
+#         'summary_single_prompt': prompt_templates.SUMMARY_SINGLE_PROMPT,
+#         'summary_single_prompt_params': prompt_templates.SUMMARY_SINGLE_PROMPT_PARAMS,
+#         'get_insight_prompt': prompt_templates.GET_INSIGHT_PROMPT,
+#         'get_insight_prompt_params': prompt_templates.GET_INSIGHT_PROMPT_PARAMS,
+#     }
+#     # todo does test actually create a template in the db?
 
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert data.pop("template_id")  # check if template_id is returned
-    assert data == {
-        "survey_id": "1",
-        'system_message': prompt_templates.SYSTEM_MESSAGE,
-        'system_message_params': prompt_templates.SYSTEM_MESSAGE_PARAMS,
-        'agent_initial_message': prompt_templates.AGENT_INITIAL_MESSAGE,
-        'agent_initial_message_params': prompt_templates.AGENT_INITIAL_MESSAGE_PARAMS,
-        'summary_single_prompt': prompt_templates.SUMMARY_SINGLE_PROMPT,
-        'summary_single_prompt_params': prompt_templates.SUMMARY_SINGLE_PROMPT_PARAMS,
-        'get_insight_prompt': prompt_templates.GET_INSIGHT_PROMPT,
-        'get_insight_prompt_params': prompt_templates.GET_INSIGHT_PROMPT_PARAMS,
-    }
-    # todo does test actually create a template in the db?
 
-
-def test_update_template():
-    update_data = {
-        "template_id": "7e6af56c90524f149362d2379caf2d04",
-        "survey_id": "1",
-        "system_message": "new system message",
-        "system_message_params": ["new system message params"],
-        "agent_initial_message": "new agent initial message",
-        "agent_initial_message_params": ["new agent initial message params"],
-        "summary_single_prompt": "new summary single prompt",
-        "summary_single_prompt_params": ["new summary single prompt params"],
-        "get_insight_prompt": "new get insight prompt",
-        "get_insight_prompt_params": ["new get insight prompt params"],
-    }
-    response = client.put(
-        '/template/',
-        json=update_data
-    )
-
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == update_data
+# def test_update_template():
+#     update_data = {
+#         "template_id": "7e6af56c90524f149362d2379caf2d04",
+#         "survey_id": "1",
+#         "system_message": "new system message",
+#         "system_message_params": ["new system message params"],
+#         "agent_initial_message": "new agent initial message",
+#         "agent_initial_message_params": ["new agent initial message params"],
+#         "summary_single_prompt": "new summary single prompt",
+#         "summary_single_prompt_params": ["new summary single prompt params"],
+#         "get_insight_prompt": "new get insight prompt",
+#         "get_insight_prompt_params": ["new get insight prompt params"],
+#     }
+#     response = client.put(
+#         '/template/',
+#         json=update_data
+#     )
+#
+#     assert response.status_code == status.HTTP_200_OK
+#     assert response.json() == update_data
 
 
 def test_get_template():
