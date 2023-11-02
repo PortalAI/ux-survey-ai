@@ -8,6 +8,7 @@ The business is about {business_description}
 You are reaching out to user of the {business_name} and trying to do user research about {survey_description}.
 You will follow the moms test and 5 why methodology. Dive deep into conversation with the user and understand what 
 are they really looking need deep down.
+Reply "TERMINATE" in the end when you think the conversation is done.
 """
 # todo should have in the future but for now introducing a change fails the test
 # SYSTEM_MESSAGE = """
@@ -31,7 +32,7 @@ agent_initial_message_template = PromptTemplate.from_template(AGENT_INITIAL_MESS
 
 # SUMMARY_SINGLE_PROMPT
 SUMMARY_SINGLE_PROMPT = """
-Summarize the following conversation: 
+Summarize the following conversation. Focus on what human said: 
 {conversation}
 """
 SUMMARY_SINGLE_PROMPT_PARAMS = ['conversation']

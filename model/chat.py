@@ -23,6 +23,8 @@ class ChatHistory(BaseModel):
         chat_messages: list[dict] = json.loads(chat_history_str)
         messages: list[Message] = []
         for chat_message in chat_messages:
+            if chat_message["type"] == 'system':
+                continue
             messages.append(Message(
                 role=chat_message["type"],
                 content=chat_message["data"]["content"],
