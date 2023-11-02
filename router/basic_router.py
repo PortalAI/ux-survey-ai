@@ -85,16 +85,17 @@ async def create_survey(request: service.CreateSurveyRequest,
         agent_name="Coco",
         business_name=business.business_name,
     ))
+    system_message = prompt_templates.system_message_template.format(
+        business_name=business.business_name,
+        business_description=business.business_description,
+        survey_description=request.survey_description,
+    )
     survey_entry = database_model.BusinessSurvey(
         user_id=[auth.username],
         business_id=request.business_id,
         survey_name=request.survey_name,
         survey_description=request.survey_description,
-        system_prompt=prompt_templates.system_message_template.format(
-            business_name=business.business_name,
-            business_description=business.business_description,
-            survey_description=request.survey_description,
-        ),
+        system_prompt=system_message,
         quota=request.quota,
         created_at=datetime.utcnow().isoformat(),
         initial_message=initial_message,
@@ -105,6 +106,9 @@ async def create_survey(request: service.CreateSurveyRequest,
     # add template by id
     template_table.create_item(database_model.Template(
         survey_id=response.survey_id,
+        # todo make sure that params variables are ignored
+        system_message=system_message,
+        agent_initial_message=initial_message
     ))
 
     #     business_info = business_table.get_item(request.business_id)
@@ -171,6 +175,12 @@ async def update_survey(survey_id: str,
         initial_message=request.initial_message,
     )
     business_survey_table.update_survey(new_survey)
+
+    # todo system_prompt is not modifiable in this request right?
+    template: database_model.Template = template_table.get_by_survey_id(survey_id)
+    template.agent_initial_message = request.initial_message
+    template_table.update_template(template)
+
     return service.GetSurveyResponse(**business_survey_table.get_item(survey_id).model_dump())
 
 
@@ -179,6 +189,9 @@ async def delete_survey(survey_id: str, auth: CognitoToken = Depends(cognito_con
     survey = business_survey_table.get_item(survey_id)
     Auth.validate_permission(survey, auth)
     business_survey_table.delete_item(survey_id)
+
+    template = template_table.get_by_survey_id(survey_id)
+    template_table.delete_item(template.template_id)
     return Response(status_code=204, description="")
 
 

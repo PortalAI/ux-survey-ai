@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException
 from model import service, database_model
 
-from database import table_template
+from database import table_template, table_survey
 
 template_table = table_template.TemplateTable()
+survey_table = table_survey.BusinessSurveyTable()
 
 router = APIRouter()
 
@@ -13,6 +14,13 @@ async def create_template(request: service.CreateTemplateRequest):
 
     # TODO see why setting default to None doesn't work
     # TODO add check logic (whether survey id is in the index)
+
+    survey_id = request.survey_id
+    if survey_table.get_item(survey_id) is None:
+        raise HTTPException(status_code=404, detail=f"{survey_id=} not found")
+
+    if template_table.get_by_survey_id(survey_id) is not None:
+        raise HTTPException(status_code=400, detail=f"Template for {survey_id=} already exists")
 
     template_entry = database_model.Template(
         survey_id=request.survey_id,
@@ -56,6 +64,13 @@ async def update_template(request: service.UpdateTemplateRequest):
         get_insight_prompt_params=request.get_insight_prompt_params,
     )
     ret = template_table.update_template(template_entry)
+
+    # also update the survey
+    survey = survey_table.get_item(request.survey_id)
+    survey.initial_message = request.agent_initial_message
+    survey.system_prompt = request.system_message
+    survey_table.update_survey(survey)
+
     return service.UpdateTemplateResponse(**ret)
 
 

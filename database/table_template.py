@@ -12,18 +12,20 @@ class TemplateTable(DynamodbTableBase[database_model.Template]):
         super().__init__(table_name=settings.TEMPLATE_TABLE_NAME)
         self.hash_key = "template_id"
 
-    def get_item(self, template_id) -> database_model.Template | None:
-        key = {
+    def get_key(self, template_id):
+        return {
             self.hash_key: template_id
         }
-        entry_dict = super().get_item(key)
+
+    def get_item(self, template_id) -> database_model.Template | None:
+        entry_dict = super().get_item(self.get_key(template_id))
         if entry_dict is None:
             return None
         return database_model.Template(**entry_dict)
 
     def update_template(self, template: database_model.Template):
         return self.update_item(
-            key={self.hash_key: template.template_id},
+            key=self.get_key(template.template_id),
             update_expression=(
                 "SET survey_id = :survey_id, "
                 "system_message = :system_message, "
@@ -59,3 +61,6 @@ class TemplateTable(DynamodbTableBase[database_model.Template]):
             return database_model.Template(**templates[0])
         else:
             return None
+
+    def delete_item(self, template_id: str) -> None:
+        super().delete_item(self.get_key(template_id))
