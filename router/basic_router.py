@@ -10,6 +10,7 @@ from agent import prompt_templates
 from uuid import uuid4
 
 from services.auth import Auth
+from services.survey import SurveyService
 from services.survey_record import SurveyRecordService, convo_manager
 from security import cognito_config
 
@@ -166,9 +167,7 @@ async def get_surveys(auth: CognitoToken = Depends(cognito_config.cognito_us.aut
 
 @router.get("/survey/{survey_id}", response_model=service.GetSurveyResponse)
 async def get_survey(survey_id: str, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
-    survey = business_survey_table.get_item(survey_id)
-    Auth.validate_permission(survey, auth)
-    return service.GetSurveyResponse(**survey.model_dump())
+    return SurveyService.get_survey(survey_id, auth)
 
 
 @router.put("/survey/{survey_id}", response_model=service.UpdateSurveyResponse, operation_id="update_survey")
