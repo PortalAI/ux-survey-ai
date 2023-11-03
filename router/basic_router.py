@@ -77,7 +77,16 @@ async def delete_business(business_id: str, auth: CognitoToken = Depends(cognito
 @router.post("/survey/", response_model=service.CreateSurveyResponse)
 async def create_survey(request: service.CreateSurveyRequest,
                         auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
-    business = business_table.get_item(request.business_id)
+    if request.business_id is None:
+        business = database_model.Business(
+            business_name=request.business_name,
+            business_description=request.business_description,
+            user_id=[auth.username],
+            created_at=datetime.utcnow().isoformat(),
+        )
+        business_table.create_item(business)
+    else:
+        business = business_table.get_item(request.business_id)
     Auth.validate_permission(business, auth)
     initial_message = (request.initial_message
                        if request.initial_message is not None
@@ -87,7 +96,7 @@ async def create_survey(request: service.CreateSurveyRequest,
     ))
     survey_entry = database_model.BusinessSurvey(
         user_id=[auth.username],
-        business_id=request.business_id,
+        business_id=business.business_id,
         survey_name=request.survey_name,
         survey_description=request.survey_description,
         system_prompt=prompt_templates.system_message_template.format(
