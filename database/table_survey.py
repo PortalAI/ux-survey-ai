@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from model import database_model
 from database import dynamodb_table_base
@@ -45,13 +46,17 @@ class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.B
             }
         )
 
-    def get_surveys(self, business_id: str, user_id: str) -> Sequence[database_model.BusinessSurvey]:
-        response = self.table.query(
-            IndexName='gsi1',
-            KeyConditionExpression=Key('business_id').eq(business_id),
-            FilterExpression=Attr('user_id').contains(user_id)
-        )
-        res_list = response.get('Items', [])
+    def get_surveys(self, user_id: str, business_id: Optional[str] = None) -> Sequence[database_model.BusinessSurvey]:
+        query_kwargs = {
+            "IndexName": "gsi1",
+            "FilterExpression": Attr("user_id").contains(user_id),
+        }
+
+        if business_id is not None:
+            query_kwargs["KeyConditionExpression"] = Key("business_id").eq(business_id)
+
+        response = self.table.scan(**query_kwargs)
+        res_list = response.get("Items", [])
         return [database_model.BusinessSurvey(**bs_dict) for bs_dict in res_list]
 
     def update_survey_insight(

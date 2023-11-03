@@ -6,9 +6,7 @@ import uuid
 from router import basic_router, template_router
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
-from fastapi_cognito import CognitoToken
 from config import settings
-from security import cognito_config
 
 
 log_config.setup_logging()

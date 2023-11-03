@@ -10,6 +10,7 @@ from agent import prompt_templates
 from uuid import uuid4
 
 from services.auth import Auth
+from services.survey import SurveyService
 from services.survey_record import SurveyRecordService, convo_manager
 from security import cognito_config
 
@@ -77,7 +78,16 @@ async def delete_business(business_id: str, auth: CognitoToken = Depends(cognito
 @router.post("/survey/", response_model=service.CreateSurveyResponse)
 async def create_survey(request: service.CreateSurveyRequest,
                         auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
-    business = business_table.get_item(request.business_id)
+    if request.business_id is None:
+        business = database_model.Business(
+            business_name=request.business_name,
+            business_description=request.business_description,
+            user_id=[auth.username],
+            created_at=datetime.utcnow().isoformat(),
+        )
+        business_table.create_item(business)
+    else:
+        business = business_table.get_item(request.business_id)
     Auth.validate_permission(business, auth)
     initial_message = (request.initial_message
                        if request.initial_message is not None
@@ -87,7 +97,7 @@ async def create_survey(request: service.CreateSurveyRequest,
     ))
     survey_entry = database_model.BusinessSurvey(
         user_id=[auth.username],
-        business_id=request.business_id,
+        business_id=business.business_id,
         survey_name=request.survey_name,
         survey_description=request.survey_description,
         system_prompt=prompt_templates.system_message_template.format(
@@ -146,11 +156,18 @@ async def create_survey(request: service.CreateSurveyRequest,
     return response
 
 
+@router.get("/survey", response_model=service.ListSurveysResponse, operation_id="get_surveys")
+async def get_surveys(auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+    survey_entries = business_survey_table.get_surveys(auth.username)
+    surveys = []
+    for survey in survey_entries:
+        surveys.append(service.GetSurveyResponse(**survey.model_dump()))
+    return service.ListSurveysResponse(surveys=surveys)
+
+
 @router.get("/survey/{survey_id}", response_model=service.GetSurveyResponse)
 async def get_survey(survey_id: str, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
-    survey = business_survey_table.get_item(survey_id)
-    Auth.validate_permission(survey, auth)
-    return service.GetSurveyResponse(**survey.model_dump())
+    return SurveyService.get_survey(survey_id, auth)
 
 
 @router.put("/survey/{survey_id}", response_model=service.UpdateSurveyResponse, operation_id="update_survey")
@@ -203,7 +220,7 @@ async def get_surveys_list_by_business_id(business_id: str,
                                           auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
     business = business_table.get_item(business_id)
     Auth.validate_permission(business, auth)
-    survey_entries = business_survey_table.get_surveys(business_id, auth.username)
+    survey_entries = business_survey_table.get_surveys(auth.username, business_id)
     return service.ListSurveysByBusinessResponse(
         surveys=[service.GetSurveyResponse(**survey.model_dump()) for survey in survey_entries]
     )

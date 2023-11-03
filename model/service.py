@@ -46,7 +46,9 @@ class ListBusinessResponse(BaseModel):
 
 ################ Survey ################
 class CreateSurveyRequest(BaseModel):
-    business_id: str
+    business_id: str | None = Field(default=None)
+    business_name: str = Field(default="")
+    business_description: str = Field(default="")
     survey_name: str
     survey_description: str
     quota: int = Field(default=1000)
@@ -88,6 +90,7 @@ class GetSurveyResponse(BaseModel):
     survey_name: str
     survey_description: str
     initial_message: str
+    survey_records_count: int | None = Field(default=None)
 
 
 class GetSurveyInsightResponse(BaseModel):
@@ -99,6 +102,10 @@ class ListSurveyByBusinessRequest(BaseModel):
 
 
 class ListSurveysByBusinessResponse(BaseModel):
+    surveys: list[GetSurveyResponse]
+
+
+class ListSurveysResponse(BaseModel):
     surveys: list[GetSurveyResponse]
 
 
