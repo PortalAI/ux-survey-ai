@@ -170,6 +170,11 @@ async def get_survey(survey_id: str, auth: CognitoToken = Depends(cognito_config
     return SurveyService.get_survey(survey_id, auth)
 
 
+@router.get('/survey_info/{survey_id}', response_model=service.GetSurveyInfoResponse)
+async def get_survey_info(survey_id: str, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+    return SurveyService.get_info(survey_id, auth)
+
+
 @router.put("/survey/{survey_id}", response_model=service.UpdateSurveyResponse, operation_id="update_survey")
 async def update_survey(survey_id: str,
                         request: service.UpdateSurveyRequest,

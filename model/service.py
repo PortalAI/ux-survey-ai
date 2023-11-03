@@ -95,6 +95,25 @@ class GetSurveyResponse(BaseModel):
     survey_records_count: int | None = Field(default=None)
 
 
+class SurveyRecordsInfo(BaseModel):
+    survey_id: str
+    record_id: str
+    chat_history: chat.ChatHistory
+    record_state: database_model.SurveyRecordState
+    n_human_messages: int
+
+
+class GetSurveyInfoResponse(BaseModel):
+    business_id: str
+    survey_id: str
+    survey_name: str
+    survey_description: str
+    system_prompt: str
+    initial_message: str
+    survey_records_count: int | None = Field(default=None)
+    survey_records: list[SurveyRecordsInfo] | None = []
+
+
 class GetSurveyInsightResponse(BaseModel):
     survey_insight: str
 
