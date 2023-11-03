@@ -28,7 +28,7 @@ class SurveyRecordService:
     @staticmethod
     def complete(record: SurveyRecord) -> SurveyRecord:
         SurveyRecordService.init_summary(record)
-        survey = business_survey_table.get_item(record.survey_id)
+        # survey = business_survey_table.get_item(record.survey_id)
         # SurveyRecordService.init_insight(survey)
         SurveyRecordService.set_state(record, SurveyRecordState.COMPLETED)
         return record
@@ -51,7 +51,9 @@ class SurveyRecordService:
         summaries = [record.summary for record in records if record.summary != "" and record.summary is not None]
         # TODO: cut prompt to fit into the context
         insight_prompt_template = PromptTemplate.from_template(templates.get_insight_prompt)
-        insight_prompt = insight_prompt_template.format(goal=survey.survey_description, summaries='\n'.join(summaries))
+        if "{goal}" in insight_prompt_template:
+            insight_prompt_template = insight_prompt_template.replace("{goal}", survey.system_prompt)
+        insight_prompt = insight_prompt_template.format(summaries='\n'.join(summaries))
         
         insight = complete(insight_prompt)
         business_survey_table.update_survey_insight(survey.survey_id, insight)
@@ -67,6 +69,6 @@ class SurveyRecordService:
     def is_completion_goal_reached(chat: ChatHistory) -> bool:
         if "TERMINATE" in chat.messages[-1].content:
             chat.messages[-1].content = chat.messages[-1].content.replace("TERMINATE", "")
-            breakpoint()
+            # breakpoint()
             return True
         return len(chat.messages) > 60

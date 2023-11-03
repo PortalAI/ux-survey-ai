@@ -183,7 +183,7 @@ async def update_survey(survey_id: str,
         quota=survey.quota,
         user_id=survey.user_id,
         created_at=survey.created_at,
-        system_prompt=survey.system_prompt,
+        system_prompt=request.system_prompt,
         survey_description=request.survey_description,
         initial_message=request.initial_message,
     )
@@ -286,6 +286,7 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
         created_at=datetime.utcnow().isoformat(),
         chat_history=agent.extract_chat_history_str(),
         record_state=database_model.SurveyRecordState.IN_PROGRESS,
+        system_message=survey.system_prompt,
     )
     survey_record_table.create_item(record_entry)
     chat_history_messages: chat.ChatHistory = agent.extract_chat_history_chat_history()

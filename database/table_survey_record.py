@@ -9,17 +9,6 @@ class SurveyRecordTable(dynamodb_table_base.DynamodbTableBase[database_model.Sur
     def __init__(self):
         super().__init__(table_name=settings.SURVEY_RECORD_TABLE_NAME)
 
-    def initiate_survey_session(self, survey_id: str, session_id: str):
-        survey_session_entry = database_model.SurveyRecord(
-            survey_id=survey_id,
-            session_id=session_id,
-            chat_history=None,
-            summary=None,
-            structured_summary=None,
-            record_state=database_model.SurveyRecordState.IN_PROGRESS,
-        )
-        self.create_item(survey_session_entry)
-
     def get_item(self, record_id: str) -> database_model.SurveyRecord | None:
         key = {
             'record_id': record_id
