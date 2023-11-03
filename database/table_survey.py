@@ -20,6 +20,9 @@ class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.B
             return None
         return database_model.BusinessSurvey(**entry_dict)
 
+    def survey_exist(self, survey_id: str) -> bool:
+        return self.get_item(survey_id=survey_id) is not None
+
     def delete_item(self, survey_id: str) -> None:
         key = {
             'survey_id': survey_id
@@ -74,3 +77,6 @@ class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.B
     def get_prompt_from_survey_id(self, survey_id: str) -> tuple[str, str] | None:
         record = self.get_item(survey_id=survey_id)
         return record.system_prompt, record.initial_message
+
+    def update_prompts(self, survey_id: str, system_message: str, summerization_prompt: str, insight_prompt: str) -> None:
+        pass

@@ -31,7 +31,9 @@ class BusinessSurvey(BaseModel):
     survey_name: str
     survey_description: str
     system_prompt: str
-    initial_message: str
+    summarization_prompt: str = Field(default="", description="temporarily used")
+    insight_prompt: str = Field(default="", description="temporarily used")
+    initial_message: str = Field(default="", description="not being used, we let the AI generate initial message.")
     assistant_name: str = Field(default="Assistant", description="The name BO want to show on top of the chat.")
     insight: str = Field(default="No completed chats to generate insight", description="The insight of summaries of all its survey records.")
     quota: int
