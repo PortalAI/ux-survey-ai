@@ -32,7 +32,7 @@ class LangChainAgent:
             retrieved_chat_history = ChatMessageHistory(messages=retrieved_messages)
             memory = ConversationBufferMemory(chat_memory=retrieved_chat_history)
 
-        model = ChatOpenAI(temperature=0, model_name=self.gpt_model, openai_api_key=settings.OPENAI_API_KEY, request_timeout=10, max_retries=3)
+        model = ChatOpenAI(temperature=0, model_name=self.gpt_model, openai_api_key=settings.OPENAI_API_KEY, request_timeout=15, max_retries=1)
         self._chain = ConversationChain(
             llm=model,
             memory=memory,
@@ -43,7 +43,7 @@ class LangChainAgent:
         try:
             if self.gpt_model == GPT_3_5 and self.falback_start_timer is not None and time.time() - self.falback_start_timer > 60:
                 self.gpt_model = GPT_4
-                self._chain.llm = ChatOpenAI(temperature=0, model_name=self.gpt_model, openai_api_key=settings.OPENAI_API_KEY, request_timeout=10, max_retries=3)            
+                self._chain.llm = ChatOpenAI(temperature=0, model_name=self.gpt_model, openai_api_key=settings.OPENAI_API_KEY, request_timeout=15, max_retries=1)
                 logger.info("waited %s before switching to model %s", time.time() - self.falback_start_timer, self._chain.llm.model_name)
                 self.falback_start_timer = None
             response = self._chain.predict(input=text)
@@ -53,7 +53,7 @@ class LangChainAgent:
                 self.gpt_model = GPT_3_5
                 logger.warning("switching to model: %s", self.gpt_model)
                 self.falback_start_timer = time.time()
-                self._chain.llm = ChatOpenAI(temperature=0, model_name=self.gpt_model, openai_api_key=settings.OPENAI_API_KEY, request_timeout=10, max_retries=3)
+                self._chain.llm = ChatOpenAI(temperature=0, model_name=self.gpt_model, openai_api_key=settings.OPENAI_API_KEY, request_timeout=15, max_retries=1)
                 response = self._chain.predict(input=text)
             else:
                 logger.exception("model %s throttled", self.gpt_model)
