@@ -32,10 +32,15 @@ class SurveyService:
             for message in chat_history.messages:
                 if message.role == 'human':
                     n_human_messages += 1
-
+            
+            record_dict = record.model_dump()
+            record_dict.update({
+                'chat_history':chat_history
+            })
+            
             survey_records.append(
                 SurveyRecordsInfo(
-                    **record.model_dump(),
+                    **record_dict,
                     n_human_messages=n_human_messages,
                 )
             )
