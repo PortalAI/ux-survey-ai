@@ -30,7 +30,7 @@ class BusinessSurvey(BaseModel):
     target_audience_description: str | None = Field(default=None)
     survey_name: str
     survey_description: str
-    system_prompt: str
+    system_prompt: str = Field(default="", description="temporarily used")
     summarization_prompt: str = Field(default="", description="temporarily used")
     insight_prompt: str = Field(default="", description="temporarily used")
     initial_message: str = Field(default="", description="not being used, we let the AI generate initial message.")
@@ -58,6 +58,7 @@ class SurveyRecord(BaseModel):
     customer_id: str | None = Field(default=None)
     chat_history: str | None = Field(default=None)
     summary: str | None = Field(default=None)
+    system_message: str | None = Field(default=None)
     structured_summary: dict | None = Field(default=None)
     created_at: str
     updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())

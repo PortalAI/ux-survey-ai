@@ -34,8 +34,20 @@ async def create_template(request: service.CreateTemplateRequest):
 async def update_template(request: service.UpdateTemplateRequest):
     if not business_survey_table.survey_exist(request.survey_id):
         raise HTTPException(status_code=404, detail=f"{request.survey_id=} not found")
-    business_survey_table.update_prompts()
-    return None
+    template_entry = database_model.Template(
+        template_id=request.template_id,
+        survey_id=request.survey_id,
+        system_message=request.system_message,
+        system_message_params=request.system_message_params,
+        agent_initial_message=request.agent_initial_message,
+        agent_initial_message_params=request.agent_initial_message_params,
+        summary_single_prompt=request.summary_single_prompt,
+        summary_single_prompt_params=request.summary_single_prompt_params,
+        get_insight_prompt=request.get_insight_prompt,
+        get_insight_prompt_params=request.get_insight_prompt_params,
+    )
+    ret = template_table.update_template(template_entry)
+    return service.UpdateTemplateResponse(**ret)
 
 
 

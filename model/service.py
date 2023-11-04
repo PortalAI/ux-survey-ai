@@ -67,6 +67,7 @@ class UpdateSurveyRequest(BaseModel):
     business_id: str
     survey_id: str
     survey_name: str
+    system_prompt: str
     survey_description: str
     initial_message: str
 
@@ -89,6 +90,7 @@ class GetSurveyResponse(BaseModel):
     survey_id: str
     survey_name: str
     survey_description: str
+    system_prompt: str
     initial_message: str
     survey_records_count: int | None = Field(default=None)
 

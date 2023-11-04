@@ -37,25 +37,34 @@ class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.B
                 "SET survey_description = :survey_description, "
                 "survey_name = :survey_name, "
                 "initial_message = :initial_message, "
+                "system_prompt = :system_prompt, "
                 "updated_at = :updated_at"),
             expression_attribute_values={
                 ":survey_name": survey.survey_name,
                 ":survey_description": survey.survey_description,
                 ":initial_message": survey.initial_message,
+                ":system_prompt": survey.system_prompt,
                 ":updated_at": datetime.utcnow().isoformat(),
             }
         )
 
     def get_surveys(self, user_id: str, business_id: Optional[str] = None) -> Sequence[database_model.BusinessSurvey]:
-        query_kwargs = {
-            "IndexName": "gsi1",
-            "FilterExpression": Attr("user_id").contains(user_id),
-        }
-
         if business_id is not None:
-            query_kwargs["KeyConditionExpression"] = Key("business_id").eq(business_id)
+            # Using query when business_id is provided
+            query_kwargs = {
+                "IndexName": "gsi1",
+                "KeyConditionExpression": Key("business_id").eq(business_id),
+                "FilterExpression": Attr("user_id").contains(user_id),
+            }
+            response = self.table.query(**query_kwargs)
+        else:
+            # Using scan as a fallback when no business_id is provided
+            query_kwargs = {
+                "IndexName": "gsi1",
+                "FilterExpression": Attr("user_id").contains(user_id),
+            }
+            response = self.table.scan(**query_kwargs)
 
-        response = self.table.scan(**query_kwargs)
         res_list = response.get("Items", [])
         return [database_model.BusinessSurvey(**bs_dict) for bs_dict in res_list]
 
@@ -80,8 +89,8 @@ class BusinessSurveyTable(dynamodb_table_base.DynamodbTableBase[database_model.B
         return response.get('Items', [])
 
     def get_prompt_from_survey_id(self, survey_id: str) -> tuple[str, str] | None:
-        record = self.get_item(survey_id=survey_id)
-        return record.system_prompt, record.initial_message
+        survey = self.get_item(survey_id=survey_id)
+        return survey.system_prompt, survey.initial_message
 
     def update_prompts(self, survey_id: str, system_message: str, summerization_prompt: str, insight_prompt: str) -> None:
         pass
