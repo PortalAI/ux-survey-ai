@@ -49,13 +49,10 @@ class SurveyRecordService:
         survey = business_survey_table.get_item(survey.survey_id)
         records = survey_record_table.list_survey_records(survey_id=survey.survey_id)
         summaries = [record.summary for record in records if record.summary != "" and record.summary is not None]
+        insight_prompt = PromptTemplate.from_template(template=templates.get_insight_prompt)
         # TODO: cut prompt to fit into the context
-        insight_prompt_template = PromptTemplate.from_template(templates.get_insight_prompt)
-        if "{goal}" in insight_prompt_template:
-            insight_prompt_template = insight_prompt_template.replace("{goal}", survey.system_prompt)
-        insight_prompt = insight_prompt_template.format(summaries='\n'.join(summaries))
-        
-        insight = complete(insight_prompt)
+        formatted = insight_prompt.format(goal=survey.system_prompt, summaries='\n'.join(summaries))
+        insight = complete(formatted)
         business_survey_table.update_survey_insight(survey.survey_id, insight)
         return insight
 

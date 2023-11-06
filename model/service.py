@@ -245,3 +245,8 @@ class GetTemplateResponse(BaseModel):
     summary_single_prompt_params: list[str]
     get_insight_prompt: str
     get_insight_prompt_params: list[str]
+
+
+class SurveyReport(BaseModel):
+    type: str
+    content: str
