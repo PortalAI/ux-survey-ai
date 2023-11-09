@@ -1,5 +1,6 @@
 from fastapi_cognito import CognitoToken
 
+from agent import langchain_agent
 from database import table_survey, table_survey_record
 from model.service import GetSurveyResponse
 from services.auth import Auth
@@ -15,3 +16,8 @@ class SurveyService:
         Auth.validate_permission(survey, auth)
         records = survey_record_table.list_survey_records(survey_id=survey_id)
         return GetSurveyResponse(**survey.model_dump(), survey_records_count=len(records))
+
+    @staticmethod
+    def create_init_message(system_prompt: str) -> str:
+        agent = langchain_agent.LangChainAgent(system_message=system_prompt)
+        return agent.generate_response(system_prompt)

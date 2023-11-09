@@ -44,8 +44,8 @@ class ConversationManager:
         logger.info("record not found, creating a new one")
         # if not, get system prompt from survey table and create agent from there
         system_message, initial_message = survey_table.get_prompt_from_survey_id(survey_id=survey_id)
-        self.cache[record_id] = langchain_agent.LangChainAgent(system_message=system_message)
-        # Directly pass the system message as the second message to the AI and get response and use that as the initial message
-        self.cache[record_id].generate_response(system_message)
-        self.cache[record_id].delete_second_message()
+        self.cache[record_id] = langchain_agent.LangChainAgent(
+            system_message=system_message,
+            initial_message=initial_message,
+        )
         return self.cache[record_id]
