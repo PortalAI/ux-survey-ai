@@ -33,7 +33,7 @@ async def add_request_id(request: Request, call_next):
 @app.get("/")
 async def root():
     logger.info("hello")
-    return {"message": "Hello World", "version": "0.3.5", "version_detail": "api for sandbox"}
+    return {"message": "Hello World", "version": "0.3.6", "version_detail": "new gpt/init_message generation"}
 
 
 @app.get("/health_check")

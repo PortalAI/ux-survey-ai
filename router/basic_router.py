@@ -89,22 +89,18 @@ async def create_survey(request: service.CreateSurveyRequest,
     else:
         business = business_table.get_item(request.business_id)
     Auth.validate_permission(business, auth)
-    initial_message = (request.initial_message
-                       if request.initial_message is not None
-                       else prompt_templates.agent_initial_message_template.format(
-        agent_name="Coco",
+    system_prompt = prompt_templates.system_message_template.format(
         business_name=business.business_name,
-    ))
+        business_description=business.business_description,
+        survey_description=request.survey_description,
+    )
+    initial_message = SurveyService.create_init_message(system_prompt)
     survey_entry = database_model.BusinessSurvey(
         user_id=[auth.username],
         business_id=business.business_id,
         survey_name=request.survey_name,
         survey_description=request.survey_description,
-        system_prompt=prompt_templates.system_message_template.format(
-            business_name=business.business_name,
-            business_description=business.business_description,
-            survey_description=request.survey_description,
-        ),
+        system_prompt=system_prompt,
         quota=request.quota,
         created_at=datetime.utcnow().isoformat(),
         initial_message=initial_message,
