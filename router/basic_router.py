@@ -366,5 +366,6 @@ async def chat_with_bot(request: service.SendNewMessageRequest):
             record = SurveyRecordService.complete(record)
         return service.SendNewMessageResponse(messages=history, record_state=record.record_state)
     except Exception as e:
+        logger.exception("error found %s, type %s", e, type(e))
         SurveyRecordService.set_state(record, database_model.SurveyRecordState.ERROR)
         raise e
