@@ -1,5 +1,5 @@
-from agent import conversation_manager
-from agent.openai import complete
+from conversation.factory import ConversationImplementation, build_conversation_manager
+from conversation.open_ai import complete
 from database import table_survey_record, table_survey
 from model.chat import ChatHistory
 from model.database_model import SurveyRecord, SurveyRecordState, BusinessSurvey
@@ -11,19 +11,22 @@ logger = logging.getLogger(__name__)
 survey_record_table = table_survey_record.SurveyRecordTable()
 business_survey_table = table_survey.BusinessSurveyTable()
 
-convo_manager = conversation_manager.ConversationManager(cache_size=100, ttl=100)
+conversation_manager = build_conversation_manager(ConversationImplementation.OpenaiAssistant)
+
 
 class SurveyRecordService:
 
     @staticmethod
     def answer(record: SurveyRecord, question: str) -> ChatHistory:
         SurveyRecordService.set_state(record, SurveyRecordState.IN_PROGRESS)
-        agent = convo_manager.get_agent_from_record(record_id=record.record_id, survey_id=record.survey_id)
+        conversation = conversation_manager.get_conversation(record.record_id)
+        if conversation is None:
+            raise RuntimeError(f"Conversation for record {record.record_id} was not found to reply")
         logger.info("Generating response")
-        agent.generate_response(question)
+        conversation.reply(question)
         logger.info("Saving the response to the history")
-        survey_record_table.update_chat_history(record.record_id, agent.extract_chat_history_str())
-        return agent.extract_chat_history_chat_history()
+        survey_record_table.update_chat_history(record.record_id, conversation.stringify_chat_history())
+        return conversation.extract_chat_history()
 
     @staticmethod
     def complete(record: SurveyRecord) -> SurveyRecord:
@@ -35,10 +38,12 @@ class SurveyRecordService:
 
     @staticmethod
     def init_summary(record: SurveyRecord) -> str:
-        agent = convo_manager.get_agent_from_record(record_id=record.record_id, survey_id=record.survey_id)
+        conversation = conversation_manager.get_conversation(record.record_id)
+        if conversation is None:
+            raise RuntimeError(f"Conversation for record {record.record_id} was not found to init summary")
         templates = template_table.get_by_survey_id(record.survey_id)
         summary_prompt_template = PromptTemplate.from_template(templates.summary_single_prompt)
-        summary_prompt = summary_prompt_template.format(conversation=agent.extract_chat_history_str())
+        summary_prompt = summary_prompt_template.format(conversation=conversation.stringify_chat_history())
         summary = complete(summary_prompt)
         survey_record_table.update_summary(record.record_id, complete(summary_prompt))
         return summary
