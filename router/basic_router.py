@@ -6,12 +6,12 @@ from model import service, database_model, chat
 from database import table_business, table_survey, table_survey_record, table_template
 from fastapi_cognito import CognitoToken
 from datetime import datetime
-from agent import prompt_templates
+from conversation import prompt_templates
 from uuid import uuid4
 
 from services.auth import Auth
 from services.survey import SurveyService
-from services.survey_record import SurveyRecordService, convo_manager
+from services.survey_record import SurveyRecordService, conversation_manager
 from security import cognito_config
 
 business_table = table_business.BusinessTable()
@@ -241,8 +241,8 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
     # If FE provided a record_id
     if request.record_id is not None:
         # check cache first
-        
-        if request.record_id in convo_manager.cache:
+        conversation = conversation_manager.get_conversation(request.record_id)
+        if conversation is not None:
             logger.info("record_id found in cache, retrive from cache")
             return service.GetOrCreateSurveyRecordResponse(
                 survey_id=request.survey_id,
@@ -250,7 +250,7 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
                 survey_name=survey.survey_name,
                 description=survey.survey_description,
                 record_state=database_model.SurveyRecordState.IN_PROGRESS,
-                chat_history=convo_manager.cache[request.record_id].extract_chat_history_chat_history(),
+                chat_history=conversation.extract_chat_history(),
                 assistant_name=survey.assistant_name,
             )
         # check DB 
@@ -274,18 +274,18 @@ async def get_create_survey_record(request: service.GetOrCreateSurveyRecordReque
     # If FE didn't provide record id, create a brand-new record.
     # This means the beginning of the conversation.
     record_id = uuid4().hex
-    agent = convo_manager.get_agent_from_record(record_id=record_id, survey_id=request.survey_id)
+    conversation = conversation_manager.create_conversation(record_id=record_id, survey_id=request.survey_id)
     record_entry = database_model.SurveyRecord(
         record_id=record_id,
         survey_id=request.survey_id,
         business_id=survey.business_id,
         created_at=datetime.utcnow().isoformat(),
-        chat_history=agent.extract_chat_history_str(),
+        chat_history=conversation.stringify_chat_history(),
         record_state=database_model.SurveyRecordState.IN_PROGRESS,
         system_message=survey.system_prompt,
     )
     survey_record_table.create_item(record_entry)
-    chat_history_messages: chat.ChatHistory = agent.extract_chat_history_chat_history()
+    chat_history_messages: chat.ChatHistory = conversation.extract_chat_history()
     return service.GetOrCreateSurveyRecordResponse(
         survey_id=record_entry.survey_id,
         record_id=record_entry.record_id,
@@ -341,12 +341,6 @@ async def init_survey_summary(record_id: str):
 
 @router.get("/chat_history/{record_id}", response_model=service.GetChatHistoryResponse)
 async def get_chat_history(record_id: str):
-    # check cache first
-    if record_id in convo_manager.cache:
-        return service.GetChatHistoryResponse(
-            chat_history=convo_manager.cache[record_id].extract_chat_history_chat_history()
-        )
-    # if not exist, check DB
     record_entry = survey_record_table.get_item(record_id)
     if record_entry is None:
         raise HTTPException(status_code=404, detail=f"{record_id=} not found")

@@ -3,7 +3,7 @@ from enum import Enum
 from pydantic import BaseModel, Field
 from uuid import uuid4
 from datetime import datetime
-from agent import prompt_templates
+from conversation import prompt_templates
 
 
 class UserInfo(BaseModel):

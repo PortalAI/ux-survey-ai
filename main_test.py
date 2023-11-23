@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 from fastapi import status
-from agent import prompt_templates
+from conversation import prompt_templates
 from main import app
 
 client = TestClient(app)
