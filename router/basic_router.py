@@ -1,5 +1,8 @@
+import os
+
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.openapi.models import Response
+from fastapi.responses import FileResponse
 import logging
 
 from model import service, database_model, chat
@@ -9,10 +12,14 @@ from datetime import datetime
 from conversation import prompt_templates
 from uuid import uuid4
 
+from model.database_model import SurveyRecord
 from services.auth import Auth
 from services.survey import SurveyService
 from services.survey_record import SurveyRecordService, conversation_manager
 from security import cognito_config
+
+import openpyxl
+from openpyxl import Workbook
 
 business_table = table_business.BusinessTable()
 business_survey_table = table_survey.BusinessSurveyTable()
@@ -21,6 +28,7 @@ template_table = table_template.TemplateTable()
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+temp_folder = 'temp'
 
 ####### Business related API #######
 @router.post("/business/", response_model=service.CreateBusinessResponse)
@@ -232,6 +240,57 @@ async def list_survey_records(survey_id: str, auth: CognitoToken = Depends(cogni
     return service.ListSurveyRecordsResponse(records=survey_records)
 
 
+@router.get("/survey/{survey_id}/report/xlsx", response_class=FileResponse)
+async def list_survey_records(survey_id: str, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+    survey = business_survey_table.get_item(survey_id)
+    Auth.validate_permission(survey, auth)
+    records = survey_record_table.list_survey_records(survey_id=survey.survey_id)
+    for record in records:
+        if record.summary is None or record.summary == "":
+            SurveyRecordService.init_summary(record)
+    records = survey_record_table.list_survey_records(survey_id=survey.survey_id)
+    insight = SurveyRecordService.init_insight(survey)
+
+    wb = Workbook()
+    ws = wb.active
+
+    ws.append(['Survey Insight:'])
+    ws.append([insight])
+    ws.append(['Chats:'])
+
+    column_headers = list(SurveyRecord.model_fields.keys())
+    ws.append(column_headers)
+
+    # Add rows of data to the worksheet
+    for record in records:
+        row_data = []
+        for field in column_headers:
+            value = getattr(record, field)
+            # Convert lists to a string or some other placeholder
+            if isinstance(value, list):
+                if not value:  # If the list is empty
+                    row_data.append(None)  # or row_data.append('') if you prefer
+                else:
+                    row_data.append(', '.join(map(str, value)))  # Join non-empty lists with commas
+            else:
+                row_data.append(value)
+        ws.append(row_data)
+
+    file_path = f"{temp_folder}/report-{survey_id}.xlsx"
+    if not os.path.exists(temp_folder):
+        os.makedirs(temp_folder)
+    wb.save(file_path)
+    file = FileResponse(
+        path=file_path,
+        filename="survey_report.xlsx",
+        headers={
+            'Content-Disposition': f'attachment; filename="uxmate_survey_report.xlsx"'
+        },
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    return file
+
+
 ####### Record related API #######
 @router.post("/survey_record/", response_model=service.GetOrCreateSurveyRecordResponse)
 async def get_create_survey_record(request: service.GetOrCreateSurveyRecordRequest):
@@ -360,5 +419,6 @@ async def chat_with_bot(request: service.SendNewMessageRequest):
             record = SurveyRecordService.complete(record)
         return service.SendNewMessageResponse(messages=history, record_state=record.record_state)
     except Exception as e:
+        logger.exception("error found %s, type %s", e, type(e))
         SurveyRecordService.set_state(record, database_model.SurveyRecordState.ERROR)
         raise e
