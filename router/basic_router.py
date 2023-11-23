@@ -18,7 +18,6 @@ from services.survey import SurveyService
 from services.survey_record import SurveyRecordService, convo_manager
 from security import cognito_config
 
-import openpyxl
 from openpyxl import Workbook
 
 business_table = table_business.BusinessTable()
@@ -241,9 +240,10 @@ async def list_survey_records(survey_id: str, auth: CognitoToken = Depends(cogni
 
 
 @router.get("/survey/{survey_id}/report/xlsx", response_class=FileResponse)
-async def list_survey_records(survey_id: str, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+# async def list_survey_records(survey_id: str, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+async def get_survey_xlsx(survey_id: str):
     survey = business_survey_table.get_item(survey_id)
-    Auth.validate_permission(survey, auth)
+    # Auth.validate_permission(survey, auth)
     records = survey_record_table.list_survey_records(survey_id=survey.survey_id)
     for record in records:
         if record.summary is None or record.summary == "":
