@@ -250,3 +250,16 @@ class GetTemplateResponse(BaseModel):
 class SurveyReport(BaseModel):
     type: str
     content: str
+
+class CreateBusinessAndSurveyRequest(BaseModel):
+    survey_name: str
+    survey_description: str
+    business_name: str
+    business_description: str
+    system_prompt: str
+    initial_message: str
+    quota: int = Field(default=1000)
+
+class CreateBusinessAndSurveyResponse(BaseModel):
+    business_id: str
+    survey_id: str

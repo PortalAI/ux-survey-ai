@@ -204,9 +204,9 @@ async def delete_survey(survey_id: str, auth: CognitoToken = Depends(cognito_con
 
 
 @router.get("/survey/{survey_id}/insight", response_model=service.GetSurveyInsightResponse)
-async def get_survey_insight(survey_id: str, auth: CognitoToken = Depends(cognito_config.cognito_us.auth_required)):
+async def get_survey_insight(survey_id: str):
     survey = business_survey_table.get_item(survey_id)
-    Auth.validate_permission(survey, auth)
+    # Auth.validate_permission(survey, auth)
     return service.GetSurveyInsightResponse(survey_insight=survey.insight)
 
 
@@ -428,3 +428,29 @@ async def chat_with_bot(request: service.SendNewMessageRequest):
         logger.exception("error found %s, type %s", e, type(e))
         SurveyRecordService.set_state(record, database_model.SurveyRecordState.ERROR)
         raise e
+
+@router.post("/business_and_survey/", response_model=service.CreateBusinessAndSurveyResponse)
+async def create_business_and_survey(request: service.CreateBusinessAndSurveyRequest):
+    business_entry = database_model.Business(
+        business_name=request.business_name,
+        business_description=request.business_description,
+        user_id=[],
+        created_at=datetime.utcnow().isoformat(),
+    )
+    business_table.create_item(business_entry)
+    survey_entry = database_model.BusinessSurvey(
+        user_id=[],
+        business_id=business_entry.business_id,
+        survey_name=request.survey_name,
+        survey_description=request.survey_description,
+        system_prompt=request.system_prompt,
+        quota=request.quota,
+        created_at=datetime.utcnow().isoformat(),
+        initial_message=request.initial_message,
+    )
+    business_survey_table.create_item(survey_entry)
+    response = service.CreateBusinessAndSurveyResponse(
+        business_id=business_entry.business_id,
+        survey_id=survey_entry.survey_id,
+    )
+    return response
