@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     check_expiration: bool = True
     jwt_header_prefix: str = "Bearer"
     jwt_header_name: str = "Authorization"
+    customer_chat_root_link: str = "https://customer-uxmate.portal.ai"
     userpools: dict[str, dict[str, Any]] = {
             "us": {
                 "region": os.getenv('USERPOOL_REGION'),

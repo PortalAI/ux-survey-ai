@@ -92,7 +92,9 @@ class GetSurveyResponse(BaseModel):
     survey_description: str
     system_prompt: str
     initial_message: str
+    insight: str
     survey_records_count: int | None = Field(default=None)
+    chat_link: str
 
 
 class GetSurveyInsightResponse(BaseModel):
