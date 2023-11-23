@@ -30,3 +30,4 @@ __pycache__
 
 uxmate-be
 .pytest_cache
+/temp
