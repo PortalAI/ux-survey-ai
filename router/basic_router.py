@@ -5,6 +5,7 @@ from fastapi.openapi.models import Response
 from fastapi.responses import FileResponse
 import logging
 
+from config import settings
 from model import service, database_model, chat
 from database import table_business, table_survey, table_survey_record, table_template
 from fastapi_cognito import CognitoToken
@@ -453,5 +454,10 @@ async def create_business_and_survey(request: service.CreateBusinessAndSurveyReq
     response = service.CreateBusinessAndSurveyResponse(
         business_id=business_entry.business_id,
         survey_id=survey_entry.survey_id,
+        chat_link=f"{settings.customer_chat_root_link}/survey/{survey_entry.survey_id}"
     )
+    prompt_template = database_model.Template(
+        survey_id=response.survey_id,
+    )
+    template_table.create_item(prompt_template)
     return response
