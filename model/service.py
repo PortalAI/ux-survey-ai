@@ -265,3 +265,4 @@ class CreateBusinessAndSurveyRequest(BaseModel):
 class CreateBusinessAndSurveyResponse(BaseModel):
     business_id: str
     survey_id: str
+    chat_link: str
